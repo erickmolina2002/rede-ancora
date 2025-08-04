@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import Image from 'next/image'
+import { createWorker } from 'tesseract.js'
 import { formatLicensePlate, validateLicensePlate } from '../../utils/validation'
 
 type CameraInputProps = {
@@ -13,12 +14,6 @@ type CameraInputProps = {
   className?: string
   autoFocus?: boolean
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
-}
-
-type DetectionResult = {
-  text: string
-  confidence: number
-  boundingBox: { x: number; y: number; width: number; height: number }
 }
 
 export default function CameraInput({
@@ -34,25 +29,20 @@ export default function CameraInput({
   const [isFocused, setIsFocused] = useState(false)
   const [isCapturing, setIsCapturing] = useState(false)
   const [isScanning, setIsScanning] = useState(false)
-  const [detectionConfidence, setDetectionConfidence] = useState(0)
-  const [scanAttempts, setScanAttempts] = useState(0)
-  const [lastDetection, setLastDetection] = useState<string>('')
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const detectionHistoryRef = useRef<string[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const workerRef = useRef<any>(null)
 
   const isValid = validateLicensePlate(value)
   const hasValue = value.trim().length > 0
 
-  // License plate dimensions (typical Brazilian plate ratio ~2.4:1)
-  const PLATE_ASPECT_RATIO = 2.4
-  const SCANNING_AREA_WIDTH = 300
-  const SCANNING_AREA_HEIGHT = Math.round(SCANNING_AREA_WIDTH / PLATE_ASPECT_RATIO)
-  const CONFIDENCE_THRESHOLD = 0.8
-  const DETECTION_CONSISTENCY_REQUIRED = 3
+  // License plate scanning area
+  const SCANNING_AREA_WIDTH = 280
+  const SCANNING_AREA_HEIGHT = 120
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formattedValue = formatLicensePlate(e.target.value)
@@ -67,93 +57,86 @@ export default function CameraInput({
     setIsFocused(false)
   }
 
-  const performAdvancedOCR = useCallback(async (imageData: ImageData): Promise<DetectionResult | null> => {
-    // Simulate processing time for realistic experience
-    await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 200))
+  const initializeOCRWorker = useCallback(async () => {
+    if (!workerRef.current) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const worker: any = await createWorker()
+      await worker.loadLanguage('eng')
+      await worker.initialize('eng')
+      await worker.setParameters({
+        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-',
+        tessedit_pageseg_mode: '8',
+      })
+      workerRef.current = worker
+    }
+  }, [])
+
+  const performRealOCR = useCallback(async (canvas: HTMLCanvasElement): Promise<string | null> => {
+    try {
+      if (!workerRef.current) {
+        await initializeOCRWorker()
+      }
+
+      if (workerRef.current) {
+        const { data: { text, confidence } } = await workerRef.current.recognize(canvas)
+        console.log(`OCR Result: "${text.trim()}" (Confidence: ${confidence}%)`)
+        
+        if (confidence > 60) { // Minimum confidence threshold
+          return text.trim().toUpperCase()
+        }
+      }
+      
+      return null
+    } catch (error) {
+      console.error('OCR Error:', error)
+      return null
+    }
+  }, [initializeOCRWorker])
+
+  const processLicensePlateText = (detectedText: string): string | null => {
+    // Clean up the detected text
+    const cleanText = detectedText.replace(/[^A-Z0-9]/g, '')
     
-    // Enhanced mock OCR with confidence simulation
-    const mockPlates = [
-      'ABC-1234', 'DEF-5678', 'GHI-9012', 'JKL-3456', 'MNO-7890',
-      'PQR-1357', 'STU-2468', 'VWX-9753', 'YZA-1597', 'BCD-8642',
-      'EFG-2468', 'HIJ-1357', 'KLM-8024', 'NOP-5791', 'QRS-3146'
+    // Try different license plate patterns
+    const patterns = [
+      /^([A-Z]{3})(\d{4})$/, // ABC1234
+      /^([A-Z]{3})(\d{1})([A-Z]{1})(\d{2})$/, // ABC1D23 (Mercosul)
+      /^([A-Z]{2})(\d{4})$/, // AB1234 (older format)
     ]
-    
-    // Simulate image quality analysis based on contrast and sharpness
-    const imageQuality = analyzeImageQuality(imageData)
-    
-    // Higher chance of detection with better image quality
-    const detectionProbability = Math.min(0.85, imageQuality * 0.6 + 0.1)
-    
-    if (Math.random() < detectionProbability) {
-      const detectedText = mockPlates[Math.floor(Math.random() * mockPlates.length)]
-      
-      // Confidence based on image quality and consistency
-      const baseConfidence = 0.4 + (imageQuality * 0.5)
-      const randomVariation = (Math.random() - 0.5) * 0.2
-      const confidence = Math.max(0.1, Math.min(0.95, baseConfidence + randomVariation))
-      
-      return {
-        text: detectedText,
-        confidence,
-        boundingBox: {
-          x: imageData.width * 0.1,
-          y: imageData.height * 0.3,
-          width: imageData.width * 0.8,
-          height: imageData.height * 0.4
+
+    for (const pattern of patterns) {
+      const match = cleanText.match(pattern)
+      if (match) {
+        if (pattern.source.includes('([A-Z]{3})(\\d{1})([A-Z]{1})(\\d{2})')) {
+          // Mercosul format: ABC1D23
+          return `${match[1]}-${match[2]}${match[3]}${match[4]}`
+        } else {
+          // Standard format: ABC-1234
+          return `${match[1]}-${match[2]}`
         }
       }
     }
-    
+
+    // Try to extract any sequence that looks like a plate
+    const plateMatch = cleanText.match(/([A-Z]{2,3})(\d{3,4})|([A-Z]{3}\d[A-Z]\d{2})/)
+    if (plateMatch) {
+      const extracted = plateMatch[0]
+      if (extracted.length >= 6) {
+        // Format as standard plate
+        if (extracted.length === 7 && /[A-Z]{3}\d[A-Z]\d{2}/.test(extracted)) {
+          return `${extracted.slice(0,3)}-${extracted.slice(3)}`
+        } else {
+          const letters = extracted.match(/[A-Z]+/)?.[0] || ''
+          const numbers = extracted.match(/\d+/)?.[0] || ''
+          if (letters.length >= 2 && numbers.length >= 3) {
+            return `${letters}-${numbers}`
+          }
+        }
+      }
+    }
+
     return null
-  }, [])
-
-  const analyzeImageQuality = (imageData: ImageData): number => {
-    const data = imageData.data
-    let totalContrast = 0
-    let pixelCount = 0
-    
-    // Simple contrast analysis - in reality this would be more sophisticated
-    for (let i = 0; i < data.length; i += 16) { // Sample every 4th pixel
-      const r = data[i]
-      const g = data[i + 1]
-      const b = data[i + 2]
-      
-      const brightness = (r + g + b) / 3
-      totalContrast += Math.abs(brightness - 128) // Distance from middle gray
-      pixelCount++
-    }
-    
-    const averageContrast = totalContrast / pixelCount
-    return Math.min(1, averageContrast / 64) // Normalize to 0-1
   }
-
-  const processDetectionResult = useCallback((result: DetectionResult) => {
-    const detectedText = result.text.toUpperCase()
-    
-    // Add to detection history
-    detectionHistoryRef.current.push(detectedText)
-    if (detectionHistoryRef.current.length > 10) {  
-      detectionHistoryRef.current.shift() // Keep only last 10 detections
-    }
-    
-    // Check for consistency in recent detections
-    const recentDetections = detectionHistoryRef.current.slice(-DETECTION_CONSISTENCY_REQUIRED)
-    const consistentDetection = recentDetections.every(detection => detection === detectedText)
-    
-    setLastDetection(detectedText)
-    setDetectionConfidence(result.confidence)
-    
-    // Only proceed if we have high confidence AND consistency
-    if (result.confidence >= CONFIDENCE_THRESHOLD && 
-        consistentDetection && 
-        recentDetections.length >= DETECTION_CONSISTENCY_REQUIRED &&
-        validateLicensePlate(detectedText)) {
-      
-      const formattedPlate = formatLicensePlate(detectedText)
-      onChange(formattedPlate)
-      closeCamera()
-    }
-  }, [onChange])
 
   const scanForText = useCallback(async () => {
     if (!videoRef.current || !canvasRef.current || !isCapturing) return
@@ -164,8 +147,6 @@ export default function CameraInput({
 
     if (!context || video.videoWidth === 0 || video.videoHeight === 0) return
 
-    setScanAttempts(prev => prev + 1)
-
     // Set canvas dimensions to match video
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
@@ -173,28 +154,43 @@ export default function CameraInput({
     // Draw current video frame
     context.drawImage(video, 0, 0, canvas.width, canvas.height)
 
-    // Calculate precise scanning area matching the overlay rectangle
+    // Calculate scanning area (center rectangle)
     const displayWidth = canvas.width
     const displayHeight = canvas.height
-    
-    // Calculate the actual scanning rectangle coordinates
     const scanWidth = Math.min(SCANNING_AREA_WIDTH, displayWidth * 0.8)
     const scanHeight = Math.min(SCANNING_AREA_HEIGHT, displayHeight * 0.3)
     const scanX = (displayWidth - scanWidth) / 2
     const scanY = (displayHeight - scanHeight) / 2
 
-    // Extract ONLY the scanning region for OCR
+    // Extract the scanning region
     const imageData = context.getImageData(scanX, scanY, scanWidth, scanHeight)
     
-    try {
-      const result = await performAdvancedOCR(imageData)
-      if (result) {
-        processDetectionResult(result)
+    // Create a temporary canvas for the cropped region
+    const tempCanvas = document.createElement('canvas')
+    tempCanvas.width = scanWidth
+    tempCanvas.height = scanHeight
+    const tempContext = tempCanvas.getContext('2d')
+    
+    if (tempContext) {
+      tempContext.putImageData(imageData, 0, 0)
+      
+      try {
+        const detectedText = await performRealOCR(tempCanvas)
+        
+        if (detectedText) {
+          const formattedPlate = processLicensePlateText(detectedText)
+          
+          if (formattedPlate && validateLicensePlate(formattedPlate)) {
+            console.log('Valid license plate detected:', formattedPlate)
+            onChange(formatLicensePlate(formattedPlate))
+            closeCamera()
+          }
+        }
+      } catch (error) {
+        console.error('Error during OCR processing:', error)
       }
-    } catch (error) {
-      console.error('Error during OCR processing:', error)
     }
-  }, [isCapturing, performAdvancedOCR, processDetectionResult, SCANNING_AREA_WIDTH, SCANNING_AREA_HEIGHT])
+  }, [isCapturing, performRealOCR, onChange])
 
   // Start automatic scanning when video is ready
   useEffect(() => {
@@ -203,13 +199,10 @@ export default function CameraInput({
       
       const handleVideoReady = () => {
         setIsScanning(true)
-        setScanAttempts(0)
-        setDetectionConfidence(0)
-        setLastDetection('')
-        detectionHistoryRef.current = []
-        
-        // Start more frequent scanning for better responsiveness
-        scanIntervalRef.current = setInterval(scanForText, 800)
+        // Initialize OCR worker
+        initializeOCRWorker()
+        // Start scanning every 2 seconds for better OCR processing
+        scanIntervalRef.current = setInterval(scanForText, 2000)
       }
 
       if (video.readyState >= 2) {
@@ -222,28 +215,21 @@ export default function CameraInput({
         video.removeEventListener('loadeddata', handleVideoReady)
       }
     }
-  }, [isCapturing, scanForText])
+  }, [isCapturing, scanForText, initializeOCRWorker])
 
-  // Cleanup scanning interval
+  // Cleanup scanning interval and OCR worker
   useEffect(() => {
     return () => {
       if (scanIntervalRef.current) {
         clearInterval(scanIntervalRef.current)
         scanIntervalRef.current = null
       }
+      if (workerRef.current) {
+        workerRef.current.terminate()
+        workerRef.current = null
+      }
     }
   }, [])
-
-  const handleManualConfirm = () => {
-    if (lastDetection && validateLicensePlate(lastDetection)) {
-      const formattedPlate = formatLicensePlate(lastDetection)
-      onChange(formattedPlate)
-      closeCamera()
-    } else {
-      // If no good detection, close camera for manual input
-      closeCamera()
-    }
-  }
 
   const handleCameraClick = async () => {
     try {
@@ -275,12 +261,12 @@ export default function CameraInput({
       clearInterval(scanIntervalRef.current)
       scanIntervalRef.current = null
     }
+    if (workerRef.current) {
+      workerRef.current.terminate()
+      workerRef.current = null
+    }
     setIsCapturing(false)
     setIsScanning(false)
-    setDetectionConfidence(0)
-    setScanAttempts(0)
-    setLastDetection('')
-    detectionHistoryRef.current = []
   }
 
   return (
@@ -350,194 +336,59 @@ export default function CameraInput({
         </div>
       )}
 
-      {/* Enhanced Camera Modal */}
+      {/* Camera Modal - Layout Simples */}
       {isCapturing && (
-        <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-          <div className="relative w-full h-full max-w-sm mx-auto">
-            {/* Header with Enhanced Status */}
-            <div className="absolute top-4 left-4 right-4 z-10">
-              <div className="bg-black/70 backdrop-blur-sm rounded-lg p-4 border border-white/10">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-white text-lg font-semibold">Scanner de Placa</h3>
-                  <div className="text-white/60 text-sm">#{scanAttempts}</div>
-                </div>
-                
-                <p className="text-white/80 text-sm mb-2">
-                  {isScanning 
-                    ? 'Alinhe a placa dentro do retângulo' 
-                    : 'Aguardando câmera...'
-                  }
-                </p>
-
-                {/* Detection Status */}
-                {isScanning && (
-                  <div className="space-y-2">
-                    {/* Confidence Bar */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-white/60 text-xs">Confiança:</span>
-                      <div className="flex-1 bg-white/20 rounded-full h-2">
-                        <div 
-                          className={`h-2 rounded-full transition-all duration-300 ${
-                            detectionConfidence >= CONFIDENCE_THRESHOLD 
-                              ? 'bg-green-400' 
-                              : detectionConfidence > 0.5 
-                                ? 'bg-yellow-400' 
-                                : 'bg-red-400'
-                          }`}
-                          style={{ width: `${detectionConfidence * 100}%` }}
-                        />
-                      </div>
-                      <span className="text-white/60 text-xs min-w-[3rem]">
-                        {Math.round(detectionConfidence * 100)}%
-                      </span>
-                    </div>
-
-                    {/* Last Detection */}
-                    {lastDetection && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-white/60 text-xs">Detectado:</span>
-                        <span className="text-white font-mono text-sm">{lastDetection}</span>
-                        {detectionConfidence >= CONFIDENCE_THRESHOLD && (
-                          <span className="text-green-400 text-xs">✓</span>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Scanning Indicator */}
-                    <div className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-3 w-3 border-2 border-white/30 border-t-white"></div>
-                      <span className="text-white/60 text-xs">
-                        Escaneando continuamente...
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded-lg max-w-sm w-full mx-4">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold mb-2">Capturar Placa</h3>
+              <p className="text-sm text-gray-600">
+                {isScanning ? 'Escaneando automaticamente...' : 'Posicione a câmera sobre a placa do veículo'}
+              </p>
             </div>
-
-            {/* Video Container */}
-            <div className="relative w-full h-full">
+            
+            <div className="relative mb-4">
               <video
                 ref={videoRef}
-                className="w-full h-full object-cover"
+                className="w-full h-48 object-cover rounded-lg bg-gray-200"
                 playsInline
                 muted
               />
               
-              {/* Enhanced Scanning Overlay */}
-              <div className="absolute inset-0">
-                {/* Precise License Plate Rectangle */}
+              {/* Retângulo de Escaneamento Simples */}
+              <div className="absolute inset-0 flex items-center justify-center">
                 <div 
-                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border-2 border-white rounded-lg shadow-2xl"
+                  className="border-2 border-white rounded-lg shadow-lg"
                   style={{ 
-                    width: `${SCANNING_AREA_WIDTH}px`, 
-                    height: `${SCANNING_AREA_HEIGHT}px` 
+                    width: `${Math.min(SCANNING_AREA_WIDTH, 240)}px`, 
+                    height: `${Math.min(SCANNING_AREA_HEIGHT, 100)}px` 
                   }}
                 >
-                  {/* Enhanced Corner Indicators */}
-                  <div className="absolute -top-2 -left-2 w-8 h-8 border-t-4 border-l-4 border-green-400 rounded-tl-lg"></div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 border-t-4 border-r-4 border-green-400 rounded-tr-lg"></div>
-                  <div className="absolute -bottom-2 -left-2 w-8 h-8 border-b-4 border-l-4 border-green-400 rounded-bl-lg"></div>
-                  <div className="absolute -bottom-2 -right-2 w-8 h-8 border-b-4 border-r-4 border-green-400 rounded-br-lg"></div>
+                  {/* Indicadores de canto */}
+                  <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-white"></div>
+                  <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-white"></div>
+                  <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-white"></div>
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-white"></div>
                   
-                  {/* Dynamic Scanning Line */}
-                  <div className="absolute inset-0 overflow-hidden rounded-lg">
-                    <div className={`absolute top-0 left-0 w-full h-1 transition-all duration-300 ${
-                      detectionConfidence >= CONFIDENCE_THRESHOLD 
-                        ? 'bg-green-400 shadow-lg shadow-green-400/50' 
-                        : 'bg-white animate-pulse'
-                    }`}></div>
-                  </div>
-                  
-                  {/* License Plate Guide */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className={`px-3 py-1 rounded text-xs font-medium backdrop-blur-sm transition-colors ${
-                      detectionConfidence >= CONFIDENCE_THRESHOLD
-                        ? 'bg-green-500/80 text-white'
-                        : 'bg-black/60 text-white/80'
-                    }`}>
-                      {detectionConfidence >= CONFIDENCE_THRESHOLD ? 'DETECTADO!' : 'PLACA DO CARRO'}
+                  {/* Linha de escaneamento */}
+                  {isScanning && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-full h-0.5 bg-white animate-pulse"></div>
                     </div>
-                  </div>
+                  )}
                 </div>
-
-                {/* Precise SVG Mask for Blur Effect */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                  <defs>
-                    <mask id="preciseScanningMask">
-                      <rect x="0" y="0" width="100%" height="100%" fill="white"/>
-                      <rect 
-                        x="50%" 
-                        y="50%" 
-                        width={SCANNING_AREA_WIDTH} 
-                        height={SCANNING_AREA_HEIGHT}
-                        transform={`translate(-${SCANNING_AREA_WIDTH/2}, -${SCANNING_AREA_HEIGHT/2})`} 
-                        fill="black" 
-                        rx="8"
-                      />
-                    </mask>
-                  </defs>
-                  <rect 
-                    x="0" 
-                    y="0" 
-                    width="100%" 
-                    height="100%" 
-                    fill="rgba(0,0,0,0.7)" 
-                    mask="url(#preciseScanningMask)"
-                  />
-                </svg>
               </div>
-
+              
               <canvas ref={canvasRef} className="hidden" />
             </div>
             
-            {/* Enhanced Bottom Controls */}
-            <div className="absolute bottom-4 left-4 right-4 safe-area-pb">
-              <div className="bg-black/70 backdrop-blur-sm rounded-lg p-4 border border-white/10">
-                {/* Detection Actions */}
-                {lastDetection && detectionConfidence > 0.3 ? (
-                  <div className="space-y-3">
-                    <button
-                      onClick={handleManualConfirm}
-                      className={`w-full py-4 px-6 rounded-lg font-medium transition-all text-base active:scale-95 ${
-                        detectionConfidence >= CONFIDENCE_THRESHOLD
-                          ? 'bg-green-500 hover:bg-green-600 text-white shadow-lg'
-                          : 'bg-yellow-500 hover:bg-yellow-600 text-black'
-                      }`}
-                    >
-                      {detectionConfidence >= CONFIDENCE_THRESHOLD 
-                        ? `Confirmar: ${lastDetection}` 
-                        : `Usar Detecção: ${lastDetection}`
-                      }
-                    </button>
-                    
-                    <button
-                      onClick={closeCamera}
-                      className="w-full bg-white/20 text-white py-3 px-6 rounded-lg font-medium hover:bg-white/30 transition-colors text-sm active:scale-95"
-                    >
-                      Cancelar e Digitar Manualmente
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="text-center py-2">
-                      <p className="text-white/80 text-sm">
-                        Posicione a placa dentro do retângulo
-                      </p>
-                      <p className="text-white/60 text-xs mt-1">
-                        A detecção será automática
-                      </p>
-                    </div>
-                    
-                    <button
-                      onClick={closeCamera}
-                      className="w-full bg-white/20 text-white py-3 px-6 rounded-lg font-medium hover:bg-white/30 transition-colors text-sm active:scale-95"
-                    >
-                      Cancelar e Digitar Manualmente
-                    </button>
-                  </div>
-                )}
-              </div>
+            <div className="flex gap-2">
+              <button
+                onClick={closeCamera}
+                className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Cancelar
+              </button>
             </div>
           </div>
         </div>

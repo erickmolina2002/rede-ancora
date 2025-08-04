@@ -92,3 +92,12 @@ Steps are configured in `/src/app/config/` with typed configurations:
 ### Current Application State
 The application now supports dynamic multi-step flows with consistent UX patterns. Each flow can be easily configured and extended by adding new step definitions.
 
+## Git Automation
+
+### Auto-commit após tarefas do Claude Code:
+
+```bash
+
+git add . 
+git commit -m "" aqui coloque o que foi feito usando convencao de commits
+git push

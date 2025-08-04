@@ -59,30 +59,50 @@ export default function CameraInput({
 
   const initializeOCRWorker = useCallback(async () => {
     if (!workerRef.current) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const worker: any = await createWorker()
-      await worker.loadLanguage('eng')
-      await worker.initialize('eng')
-      await worker.setParameters({
-        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-',
-        tessedit_pageseg_mode: '8',
-      })
-      workerRef.current = worker
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const worker: any = await createWorker()
+        await worker.loadLanguage('eng')
+        await worker.initialize('eng')
+        await worker.setParameters({
+          tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-',
+          tessedit_pageseg_mode: '7', // Changed to treat image as single text line
+          tessedit_char_blacklist: '!@#$%^&*()+=[]{}|;:,.<>?/~`',
+        })
+        workerRef.current = worker
+        console.log('OCR Worker initialized successfully')
+      } catch (error) {
+        console.error('Failed to initialize OCR worker:', error)
+      }
     }
   }, [])
 
   const performRealOCR = useCallback(async (canvas: HTMLCanvasElement): Promise<string | null> => {
     try {
       if (!workerRef.current) {
+        console.log('Initializing OCR worker...')
         await initializeOCRWorker()
       }
 
       if (workerRef.current) {
-        const { data: { text, confidence } } = await workerRef.current.recognize(canvas)
+        console.log('Starting OCR recognition...')
+        
+        // Add timeout for OCR recognition
+        const ocrPromise = workerRef.current.recognize(canvas)
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('OCR timeout')), 10000)
+        )
+        
+        const result = await Promise.race([ocrPromise, timeoutPromise])
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: { text, confidence } } = result as any
+        
         console.log(`OCR Result: "${text.trim()}" (Confidence: ${confidence}%)`)
         
-        if (confidence > 60) { // Minimum confidence threshold
+        if (confidence > 30) { // Lowered threshold for better detection
           return text.trim().toUpperCase()
+        } else {
+          console.log('OCR confidence too low:', confidence)
         }
       }
       
@@ -138,7 +158,7 @@ export default function CameraInput({
     return null
   }
 
-  const scanForText = useCallback(async () => {
+  const captureAndProcess = useCallback(async () => {
     if (!videoRef.current || !canvasRef.current || !isCapturing) return
 
     const video = videoRef.current
@@ -146,6 +166,8 @@ export default function CameraInput({
     const context = canvas.getContext('2d')
 
     if (!context || video.videoWidth === 0 || video.videoHeight === 0) return
+
+    console.log('Capturing frame for OCR...')
 
     // Set canvas dimensions to match video
     canvas.width = video.videoWidth
@@ -178,19 +200,28 @@ export default function CameraInput({
         const detectedText = await performRealOCR(tempCanvas)
         
         if (detectedText) {
+          console.log('Raw OCR text:', detectedText)
           const formattedPlate = processLicensePlateText(detectedText)
           
           if (formattedPlate && validateLicensePlate(formattedPlate)) {
             console.log('Valid license plate detected:', formattedPlate)
             onChange(formatLicensePlate(formattedPlate))
             closeCamera()
+            return true
+          } else {
+            console.log('Detected text does not match license plate format:', detectedText)
           }
         }
       } catch (error) {
         console.error('Error during OCR processing:', error)
       }
     }
+    return false
   }, [isCapturing, performRealOCR, onChange])
+
+  const scanForText = useCallback(async () => {
+    await captureAndProcess()
+  }, [captureAndProcess])
 
   // Start automatic scanning when video is ready
   useEffect(() => {
@@ -383,6 +414,13 @@ export default function CameraInput({
             </div>
             
             <div className="flex gap-2">
+              <button
+                onClick={captureAndProcess}
+                className="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
+                disabled={!isScanning}
+              >
+                Capturar
+              </button>
               <button
                 onClick={closeCamera}
                 className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors"

@@ -99,5 +99,7 @@ The application now supports dynamic multi-step flows with consistent UX pattern
 ```bash
 
 git add . 
-git commit -m "" aqui coloque o que foi feito usando convencao de commits
+
+git commit -m "" aqui coloque o que foi feito usando convencao de commits,QUero que apenas coloque a descricao da tarefa e mais nada
+
 git push

@@ -124,7 +124,7 @@ export default function CameraInput({
       
       console.log(`OCR Raw: "${text}" (${confidence}% confiança)`)
       
-      if (confidence > 70) { // Confiança mínima
+      if (confidence > 50) { // Confiança mínima
         return text.trim().toUpperCase()
       }
       

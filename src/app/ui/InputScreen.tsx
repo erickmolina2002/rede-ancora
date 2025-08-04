@@ -13,6 +13,8 @@ import WhatsAppSendInput from './inputs/WhatsAppSendInput'
 import Button from './Button'
 import { InputComponentType } from '../types/step'
 
+  
+
 type InputScreenProps = {
   title: string
   subtitle?: string
@@ -98,7 +100,12 @@ export default function InputScreen({
         return <CameraInput {...commonProps} />
       
       case 'itemsearch':
-        return <ItemSearchInput {...commonProps} />
+        return <ItemSearchInput 
+          value={value}
+          onChange={setValue}
+          placeholder={placeholder}
+          autoFocus={autoFocus}
+        />
       
       case 'budgetconfirmation':
         return <BudgetConfirmationInput {...commonProps} stepData={stepData} />

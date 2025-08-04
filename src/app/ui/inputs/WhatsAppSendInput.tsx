@@ -70,9 +70,9 @@ export default function WhatsAppSendInput({
       const phoneNumber = value.replace(/\D/g, '')
       
       // Create detailed WhatsApp message with budget summary
-      const budgetName = stepData.budgetName || 'Orçamento'
-      const vehiclePlate = stepData.budgetDescription || stepData.budgetPlateConfirmation || 'N/A'
-      const budgetValue = stepData.budgetValue || '0'
+      const budgetName = String(stepData.budgetName || 'Orçamento')
+      const vehiclePlate = String(stepData.budgetDescription || stepData.budgetPlateConfirmation || 'N/A')
+      const budgetValue = String(stepData.budgetValue || '0')
       
       // Mock selected services for demonstration
       const mockSelectedServices = [
@@ -83,7 +83,7 @@ export default function WhatsAppSendInput({
       ]
       
       const partsItems = mockSelectedServices.filter(service => service.type === 'parts')
-      const servicePrice = parseFloat(budgetValue.replace(/[^\d,]/g, '').replace(',', '.')) || 0
+      const servicePrice = parseFloat(String(budgetValue).replace(/[^\d,]/g, '').replace(',', '.')) || 0
       
       const formatPrice = (price: number) => {
         return new Intl.NumberFormat('pt-BR', {

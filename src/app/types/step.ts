@@ -2,7 +2,14 @@ export type StepData = {
   [key: string]: string | number | boolean
 }
 
-export type InputComponentType = 'input' | 'number' | 'select' | 'date' | 'camera' | 'itemsearch' | 'budgetconfirmation' | 'whatsappsend' 
+export type InputComponentType = | 'input'
+  | 'number'
+  | 'select'
+  | 'date'
+  | 'camera'
+  | 'itemsearch'
+  | 'budgetconfirmation'
+  | 'whatsappsend'
 
 export type StepConfig = {
   id: string

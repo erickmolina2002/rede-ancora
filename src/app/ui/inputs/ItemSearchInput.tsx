@@ -14,7 +14,7 @@ type ItemSearchInputProps = {
   disabled?: boolean
   className?: string
   autoFocus?: boolean
-  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | HTMLDivElement>) => void
 }
 
 export default function ItemSearchInput({
@@ -109,7 +109,7 @@ export default function ItemSearchInput({
               e.preventDefault()
               handleClick()
             }
-            onKeyDown?.(e as React.KeyboardEvent<HTMLDivElement>)
+            onKeyDown?.(e)
           }}
         >
           {getDisplayValue() || placeholder}

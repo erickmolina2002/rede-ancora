@@ -61,18 +61,19 @@ export default function BudgetPage() {
   }
 
   // For confirmation step, use the license plate from step 2
-  const getDisplayValue = () => {
+  const getDisplayValue = (): string => {
     if (currentStep.id === 'budgetPlateConfirmation') {
-      return currentValue || stepData.budgetDescription || ''
+      return currentValue || String(stepData.budgetDescription || '')
     }
     return currentValue
   }
 
-  const getPlaceholder = () => {
+  const getPlaceholder = (): string | undefined => {
     if (currentStep.id === 'budgetPlateConfirmation') {
-      return stepData.budgetDescription || currentStep.placeholder
+      const value = stepData.budgetDescription || currentStep.placeholder
+      return typeof value === 'string' ? value : value !== undefined ? String(value) : undefined
     }
-    return currentStep.placeholder
+    return typeof currentStep.placeholder === 'string' ? currentStep.placeholder : currentStep.placeholder !== undefined ? String(currentStep.placeholder) : undefined
   }
 
   return (

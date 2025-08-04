@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import Image from 'next/image'
-import { createWorker } from 'tesseract.js'
+import { createWorker, Worker } from 'tesseract.js'
 import { formatLicensePlate, validateLicensePlate } from '../../utils/validation'
 
 type CameraInputProps = {
@@ -66,17 +66,18 @@ export default function CameraInput({
     try {
       setOcrStatus('Iniciando OCR...')
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const worker: any = await createWorker()
+      const worker: Worker = await createWorker()
+
       
       setOcrStatus('Carregando modelo OCR...')
-      await worker.loadLanguage('eng')
-      await worker.initialize('eng')
+      await worker.load('eng')
+      // await worker.('eng')
       
       setOcrStatus('Otimizando para placas...')
       // Configurações otimizadas para placas de carro
       await worker.setParameters({
         tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
-        tessedit_pageseg_mode: '6', // Uniform block of text
+        // tessedit_pageseg_mode: '6', // Uniform block of text
         tessedit_ocr_engine_mode: '1', // LSTM engine
         preserve_interword_spaces: '1',
         user_defined_dpi: '150',
@@ -87,10 +88,9 @@ export default function CameraInput({
         textord_min_xheight: '10',
         classify_enable_learning: '0',
       })
-
+      
       workerRef.current = worker
       setOcrStatus('')
-      console.log('✅ OCR Worker inicializado com sucesso')
       return worker
     } catch (error) {
       console.error('❌ Erro ao inicializar OCR:', error)
@@ -138,18 +138,15 @@ export default function CameraInput({
     try {
       const worker = await initializeOCR()
       if (!worker) {
-        console.log('❌ Worker OCR não disponível')
         return null
       }
 
       setOcrStatus('Processando imagem...')
-      console.log('🔍 Iniciando processamento OCR...')
 
       // Pré-processar imagem para melhor OCR
       const processedCanvas = preprocessImage(imageData)
       
       setOcrStatus('Executando OCR...')
-      console.log('📝 Executando reconhecimento de texto...')
       
       // Executar OCR com timeout
       const ocrPromise = worker.recognize(processedCanvas)
@@ -161,14 +158,12 @@ export default function CameraInput({
       const result: any = await Promise.race([ocrPromise, timeoutPromise])
       const { text, confidence } = result.data
       
-      console.log(`📊 OCR Resultado: "${text.trim()}" (Confiança: ${confidence.toFixed(1)}%)`)
       
       // Aceitar qualquer resultado com confiança mínima
       if (confidence > 1 && text.trim().length > 0) {
         return text.trim().toUpperCase()
       }
       
-      console.log('❌ Confiança muito baixa ou texto vazio')
       return null
       
     } catch (error) {
@@ -182,7 +177,6 @@ export default function CameraInput({
   const extractLicensePlate = useCallback((rawText: string): string | null => {
     if (!rawText) return null
     
-    console.log(`🔤 Texto bruto OCR: "${rawText}"`)
     
     // Limpar e normalizar texto
     const cleanText = rawText
@@ -190,7 +184,6 @@ export default function CameraInput({
       .replace(/\s+/g, '') // Remove espaços
       .toUpperCase()
     
-    console.log(`🧹 Texto limpo: "${cleanText}"`)
     
     // Tentar diferentes padrões de placa
     const patterns = [
@@ -211,7 +204,6 @@ export default function CameraInput({
       const match = cleanText.match(pattern)
       
       if (match) {
-        console.log(`✅ Padrão ${i + 1} encontrado:`, match)
         
         let result = ''
         
@@ -250,7 +242,6 @@ export default function CameraInput({
         }
         
         if (result) {
-          console.log(`🎯 Placa extraída: "${result}"`)
           return result
         }
       }
@@ -262,18 +253,15 @@ export default function CameraInput({
       const letters = fallbackMatch[1].substring(0, 3) // Máximo 3 letras
       const numbers = fallbackMatch[2].substring(0, 4) // Máximo 4 números
       const result = `${letters}-${numbers}`
-      console.log(`🔄 Fallback - Placa extraída: "${result}"`)
       return result
     }
     
-    console.log('❌ Nenhuma placa encontrada no texto')
     return null
   }, [])
 
   const captureAndProcess = useCallback(async () => {
     if (!videoRef.current || !canvasRef.current || !isCapturing) return false
 
-    console.log('Iniciando captura real da placa...')
     setScanProgress(0)
     setOcrStatus('Capturando imagem...')
 
@@ -297,11 +285,9 @@ export default function CameraInput({
       const scanX = (canvas.width - scanWidth) / 2
       const scanY = (canvas.height - scanHeight) / 2
 
-      console.log(`📐 Área de escaneamento: ${scanWidth}x${scanHeight} em (${scanX}, ${scanY})`)
 
       // Extrair região da placa com dados brutos
       const imageData = ctx.getImageData(scanX, scanY, scanWidth, scanHeight)
-      console.log(`📊 ImageData extraída: ${imageData.width}x${imageData.height}, ${imageData.data.length} pixels`)
       
       setScanProgress(30)
       
@@ -310,7 +296,6 @@ export default function CameraInput({
       setScanProgress(70)
       
       if (rawText && rawText.length > 0) {
-        console.log('✅ Texto detectado pelo OCR:', rawText)
         setScanProgress(70)
         
         // Extrair placa do texto detectado
@@ -318,13 +303,11 @@ export default function CameraInput({
         setScanProgress(85)
         
         if (extractedPlate) {
-          console.log('🎯 Placa extraída:', extractedPlate)
           
           // Tentar validar - aceitar mesmo se não passar na validação estrita
           const isStrictlyValid = validateLicensePlate(extractedPlate)
           
           if (isStrictlyValid) {
-            console.log('✅ Placa válida (validação estrita):', extractedPlate)
             setScanProgress(100)
             setOcrStatus('Placa válida detectada!')
             
@@ -337,7 +320,6 @@ export default function CameraInput({
           } else {
             // Aceitar placa mesmo sem validação estrita se parecer válida
             if (extractedPlate.match(/^[A-Z]{2,3}-[A-Z0-9]{3,4}$/)) {
-              console.log('⚠️ Placa parcial aceita:', extractedPlate)
               setScanProgress(100)
               setOcrStatus('Placa detectada (verificar)')
               
@@ -348,16 +330,13 @@ export default function CameraInput({
               
               return true
             } else {
-              console.log('❌ Placa extraída inválida:', extractedPlate)
               setOcrStatus(`Detectado: ${extractedPlate} (inválido)`)
             }
           }
         } else {
-          console.log('❌ Não foi possível extrair placa do texto:', rawText)
           setOcrStatus(`Texto: "${rawText}" (sem placa)`)
         }
       } else {
-        console.log('❌ OCR não retornou texto')
         setOcrStatus('Nenhum texto detectado')
       }
       

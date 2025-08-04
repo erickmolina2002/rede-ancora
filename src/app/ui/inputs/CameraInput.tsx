@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import Image from 'next/image'
+import { createWorker } from 'tesseract.js'
 import { formatLicensePlate, validateLicensePlate } from '../../utils/validation'
 
 type CameraInputProps = {
@@ -29,10 +30,14 @@ export default function CameraInput({
   const [isCapturing, setIsCapturing] = useState(false)
   const [isScanning, setIsScanning] = useState(false)
   const [scanProgress, setScanProgress] = useState(0)
+  const [ocrStatus, setOcrStatus] = useState('')
   
   const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const workerRef = useRef<any>(null)
 
   const isValid = validateLicensePlate(value)
   const hasValue = value.trim().length > 0
@@ -54,78 +59,227 @@ export default function CameraInput({
     setIsFocused(false)
   }
 
-  // Simulação de detecção de placa para produção
-  const simulatePlateDetection = useCallback(async (): Promise<string | null> => {
-    // Simula tempo de processamento real
-    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000))
-    
-    // Banco de placas reais para simulação
-    const mockPlates = [
-      'ABC-1234', 'DEF-5678', 'GHI-9012', 'JKL-3456', 'MNO-7890',
-      'PQR-1357', 'STU-2468', 'VWX-9753', 'YZA-1597', 'BCD-8642',
-      'EFG-2468', 'HIJ-1357', 'KLM-8024', 'NOP-5791', 'QRS-3146',
-      'TUV-4829', 'WXY-6051', 'ZAB-7384', 'CDE-9517', 'FGH-2850'
-    ]
-    
-    // Simula detecção com 85% de sucesso
-    if (Math.random() < 0.85) {
-      return mockPlates[Math.floor(Math.random() * mockPlates.length)]
+  // Inicializar OCR Worker otimizado para placas
+  const initializeOCR = useCallback(async () => {
+    if (workerRef.current) return workerRef.current
+
+    try {
+      setOcrStatus('Iniciando OCR...')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const worker: any = await createWorker()
+      
+      setOcrStatus('Carregando idiomas...')
+      await worker.loadLanguage('eng')
+      await worker.initialize('eng')
+      
+      setOcrStatus('Configurando para placas...')
+      // Configurações específicas para placas brasileiras
+      await worker.setParameters({
+        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
+        tessedit_pageseg_mode: '8', // Palavra única
+        tessedit_ocr_engine_mode: '1', // Neural network LSTM
+        preserve_interword_spaces: '0',
+        user_defined_dpi: '300',
+        tessjs_create_hocr: '0',
+        tessjs_create_tsv: '0',
+      })
+
+      workerRef.current = worker
+      setOcrStatus('OCR pronto!')
+      return worker
+    } catch (error) {
+      console.error('Erro ao inicializar OCR:', error)
+      setOcrStatus('Erro no OCR')
+      return null
     }
+  }, [])
+
+  // Processar imagem com OCR real
+  const performRealOCR = useCallback(async (imageData: ImageData): Promise<string | null> => {
+    try {
+      const worker = await initializeOCR()
+      if (!worker) return null
+
+      setOcrStatus('Analisando imagem...')
+
+      // Criar canvas temporário para pré-processamento
+      const tempCanvas = document.createElement('canvas')
+      tempCanvas.width = imageData.width
+      tempCanvas.height = imageData.height
+      const ctx = tempCanvas.getContext('2d')
+      
+      if (!ctx) return null
+
+      // Aplicar pré-processamento para melhor OCR
+      ctx.putImageData(imageData, 0, 0)
+      
+      // Aumentar contraste e brilho
+      ctx.filter = 'contrast(150%) brightness(110%) grayscale(100%)'
+      ctx.drawImage(tempCanvas, 0, 0)
+      
+      setOcrStatus('Detectando texto...')
+      
+      // Executar OCR
+      const { data: { text, confidence } } = await worker.recognize(tempCanvas)
+      
+      console.log(`OCR Raw: "${text}" (${confidence}% confiança)`)
+      
+      if (confidence > 70) { // Confiança mínima
+        return text.trim().toUpperCase()
+      }
+      
+      return null
+    } catch (error) {
+      console.error('Erro no OCR:', error)
+      setOcrStatus('Erro na detecção')
+      return null
+    }
+  }, [initializeOCR])
+
+  // Processar texto detectado para extrair placa
+  const extractLicensePlate = useCallback((rawText: string): string | null => {
+    if (!rawText) return null
     
+    // Limpar texto - apenas letras e números
+    const cleanText = rawText.replace(/[^A-Z0-9]/g, '')
+    console.log(`Texto limpo: "${cleanText}"`)
+    
+    // Padrões de placa brasileira
+    const patterns = [
+      /^([A-Z]{3})(\d{4})$/, // ABC1234 (padrão antigo)
+      /^([A-Z]{3})(\d{1})([A-Z]{1})(\d{2})$/, // ABC1D23 (Mercosul)
+    ]
+
+    // Tentar extrair com padrões exatos
+    for (const pattern of patterns) {
+      const match = cleanText.match(pattern)
+      if (match) {
+        if (match[3]) {
+          // Mercosul: ABC1D23 -> ABC-1D23
+          return `${match[1]}-${match[2]}${match[3]}${match[4]}`
+        } else {
+          // Padrão: ABC1234 -> ABC-1234
+          return `${match[1]}-${match[2]}`
+        }
+      }
+    }
+
+    // Tentar extrair sequências que parecem placas
+    const plateMatches = [
+      cleanText.match(/([A-Z]{3})(\d{4})/), // ABC1234
+      cleanText.match(/([A-Z]{3})(\d{1}[A-Z]{1}\d{2})/), // ABC1D23
+      cleanText.match(/([A-Z]{2,3})(\d{3,4})/) // Qualquer sequência similar
+    ]
+
+    for (const match of plateMatches) {
+      if (match) {
+        const letters = match[1]
+        const numbers = match[2]
+        
+        if (letters.length >= 2 && numbers.length >= 3) {
+          return `${letters}-${numbers}`
+        }
+      }
+    }
+
+    console.log('Nenhum padrão de placa encontrado')
     return null
   }, [])
 
   const captureAndProcess = useCallback(async () => {
-    if (!isCapturing) return false
+    if (!videoRef.current || !canvasRef.current || !isCapturing) return false
 
-    console.log('Iniciando captura da placa...')
+    console.log('Iniciando captura real da placa...')
     setScanProgress(0)
-    
-    // Simula progresso de processamento
-    const progressInterval = setInterval(() => {
-      setScanProgress(prev => Math.min(prev + 10, 90))
-    }, 150)
+    setOcrStatus('Capturando imagem...')
+
+    const video = videoRef.current
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+
+    if (!ctx || video.videoWidth === 0 || video.videoHeight === 0) return false
 
     try {
-      const detectedPlate = await simulatePlateDetection()
+      // Definir dimensões do canvas
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+
+      // Capturar frame atual
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+      // Calcular área de escaneamento (retângulo central)
+      const scanWidth = Math.min(SCANNING_AREA_WIDTH * 2, canvas.width * 0.8)
+      const scanHeight = Math.min(SCANNING_AREA_HEIGHT * 2, canvas.height * 0.4)
+      const scanX = (canvas.width - scanWidth) / 2
+      const scanY = (canvas.height - scanHeight) / 2
+
+      // Extrair apenas a região da placa
+      const imageData = ctx.getImageData(scanX, scanY, scanWidth, scanHeight)
       
-      clearInterval(progressInterval)
-      setScanProgress(100)
+      setScanProgress(30)
       
-      if (detectedPlate && validateLicensePlate(detectedPlate)) {
-        console.log('Placa detectada:', detectedPlate)
-        // Pequeno delay para mostrar 100%
-        setTimeout(() => {
-          onChange(formatLicensePlate(detectedPlate))
-          closeCamera()
-        }, 500)
-        return true
+      // Executar OCR na região extraída
+      const rawText = await performRealOCR(imageData)
+      setScanProgress(70)
+      
+      if (rawText) {
+        console.log('Texto detectado pelo OCR:', rawText)
+        
+        // Extrair placa do texto detectado
+        const extractedPlate = extractLicensePlate(rawText)
+        setScanProgress(90)
+        
+        if (extractedPlate && validateLicensePlate(extractedPlate)) {
+          console.log('✅ Placa válida encontrada:', extractedPlate)
+          setScanProgress(100)
+          setOcrStatus('Placa detectada!')
+          
+          // Delay para mostrar sucesso
+          setTimeout(() => {
+            onChange(formatLicensePlate(extractedPlate))
+            closeCamera()
+          }, 1000)
+          
+          return true
+        } else {
+          console.log('❌ Texto detectado não é uma placa válida:', rawText)
+          setOcrStatus('Placa não reconhecida')
+        }
       } else {
-        console.log('Nenhuma placa válida detectada')
-        setScanProgress(0)
+        console.log('❌ Nenhum texto detectado')
+        setOcrStatus('Nenhum texto encontrado')
       }
+      
+      // Reset após falha
+      setTimeout(() => {
+        setScanProgress(0)
+        setOcrStatus('')
+      }, 2000)
+      
     } catch (error) {
-      clearInterval(progressInterval)
+      console.error('Erro na captura:', error)
+      setOcrStatus('Erro na captura')
       setScanProgress(0)
-      console.error('Erro na detecção:', error)
     }
     
     return false
-  }, [isCapturing, simulatePlateDetection, onChange])
+  }, [isCapturing, performRealOCR, extractLicensePlate, onChange])
 
   const scanForText = useCallback(async () => {
     await captureAndProcess()
   }, [captureAndProcess])
 
-  // Start automatic scanning when video is ready
+  // Inicializar OCR quando captura inicia
   useEffect(() => {
     if (isCapturing && videoRef.current) {
       const video = videoRef.current
       
       const handleVideoReady = () => {
         setIsScanning(true)
-        // Start scanning every 3 seconds
-        scanIntervalRef.current = setInterval(scanForText, 3000)
+        // Inicializar OCR em background
+        initializeOCR()
+        // Escanear automaticamente a cada 5 segundos
+        scanIntervalRef.current = setInterval(scanForText, 5000)
       }
 
       if (video.readyState >= 2) {
@@ -138,14 +292,18 @@ export default function CameraInput({
         video.removeEventListener('loadeddata', handleVideoReady)
       }
     }
-  }, [isCapturing, scanForText])
+  }, [isCapturing, scanForText, initializeOCR])
 
-  // Cleanup scanning interval
+  // Cleanup
   useEffect(() => {
     return () => {
       if (scanIntervalRef.current) {
         clearInterval(scanIntervalRef.current)
         scanIntervalRef.current = null
+      }
+      if (workerRef.current) {
+        workerRef.current.terminate()
+        workerRef.current = null
       }
     }
   }, [])
@@ -180,9 +338,14 @@ export default function CameraInput({
       clearInterval(scanIntervalRef.current)
       scanIntervalRef.current = null
     }
+    if (workerRef.current) {
+      workerRef.current.terminate()
+      workerRef.current = null
+    }
     setIsCapturing(false)
     setIsScanning(false)
     setScanProgress(0)
+    setOcrStatus('')
   }
 
   return (
@@ -259,21 +422,30 @@ export default function CameraInput({
             <div className="mb-4">
               <h3 className="text-lg font-semibold mb-2">Capturar Placa</h3>
               <p className="text-sm text-gray-600">
-                {scanProgress > 0 
-                  ? `Detectando placa... ${scanProgress}%` 
+                {ocrStatus || (scanProgress > 0 
+                  ? `Processando... ${scanProgress}%` 
                   : isScanning 
-                    ? 'Escaneando automaticamente...' 
+                    ? 'OCR ativo - Posicione a placa no retângulo' 
                     : 'Posicione a câmera sobre a placa do veículo'
-                }
+                )}
               </p>
               
               {/* Barra de progresso */}
               {scanProgress > 0 && (
                 <div className="mt-2 bg-gray-200 rounded-full h-2">
                   <div 
-                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      scanProgress === 100 ? 'bg-green-500' : 'bg-blue-500'
+                    }`}
                     style={{ width: `${scanProgress}%` }}
                   />
+                </div>
+              )}
+              
+              {/* Status do OCR */}
+              {ocrStatus && (
+                <div className="mt-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                  {ocrStatus}
                 </div>
               )}
             </div>
@@ -310,6 +482,7 @@ export default function CameraInput({
                 </div>
               </div>
               
+              <canvas ref={canvasRef} className="hidden" />
             </div>
             
             <div className="flex gap-2">

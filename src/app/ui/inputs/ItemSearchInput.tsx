@@ -5,7 +5,6 @@ import Image from 'next/image'
 import SearchModal from '../modals/SearchModal'
 import SelectedItemsList from '../lists/SelectedItemsList'
 import { Item } from '../cards/ItemCard'
-import { validateMinimumItems } from '../../utils/validation'
 
 type ItemSearchInputProps = {
   value: string
@@ -19,21 +18,17 @@ type ItemSearchInputProps = {
 }
 
 export default function ItemSearchInput({
-  value,
+  value = '',
   onChange,
   placeholder = "Adicionar serviços...",
   label,
-  disabled = false,
   className = "",
-  autoFocus = false,
   onKeyDown
 }: ItemSearchInputProps) {
   const [isFocused, setIsFocused] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedItems, setSelectedItems] = useState<Item[]>([])
   const [isClicked, setIsClicked] = useState(false)
-
-  const isValid = validateMinimumItems(value) || selectedItems.length > 0
   const hasItems = selectedItems.length > 0
 
   const handleFocus = () => {
@@ -69,7 +64,7 @@ export default function ItemSearchInput({
     const newItems = selectedItems.filter(item => item.id !== itemId)
     setSelectedItems(newItems)
     
-    if (newItems.length === 0) {
+    if (newItems.length === 0 || value === '') {
       onChange('')
     } else {
       const itemsText = newItems.length === 1 
@@ -114,7 +109,7 @@ export default function ItemSearchInput({
               e.preventDefault()
               handleClick()
             }
-            onKeyDown?.(e as any)
+            onKeyDown?.(e as React.KeyboardEvent<HTMLDivElement>)
           }}
         >
           {getDisplayValue() || placeholder}

@@ -18,12 +18,7 @@ type BudgetConfirmationInputProps = {
 export default function BudgetConfirmationInput({
   value,
   onChange,
-  placeholder,
-  label,
-  disabled = false,
   className = "",
-  autoFocus = false,
-  onKeyDown,
   stepData = {}
 }: BudgetConfirmationInputProps) {
   const [editableServicePrice, setEditableServicePrice] = useState<string>('')
@@ -121,11 +116,6 @@ export default function BudgetConfirmationInput({
 
   return (
     <div className={`w-full ${className}`}>
-      {label && (
-        <label className="block paragraph-small-medium text-[#474F56] mb-2">
-          {label}
-        </label>
-      )}
       
       <div className="space-y-6 animate-in fade-in duration-500">
         {/* Budget Summary Header */}

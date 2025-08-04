@@ -82,14 +82,14 @@ export default function CameraInput({
         
         canvas.toBlob((blob) => {
           if (blob) {
-            recognizeLicensePlate(blob)
+            recognizeLicensePlate()
           }
         }, 'image/jpeg', 0.8)
       }
     }
   }
 
-  const recognizeLicensePlate = async (imageBlob: Blob) => {
+  const recognizeLicensePlate = async () => {
     try {
       // Simple OCR simulation - in a real app you'd use Tesseract.js or a cloud service
       // For now, we'll simulate license plate recognition

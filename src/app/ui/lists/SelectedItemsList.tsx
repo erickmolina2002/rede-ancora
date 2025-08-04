@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import Image from 'next/image'
 import { Item } from '../cards/ItemCard'
 
 type SelectedItemsListProps = {

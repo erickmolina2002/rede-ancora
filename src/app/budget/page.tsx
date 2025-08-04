@@ -49,16 +49,16 @@ export default function BudgetPage() {
     router.push('/')
   }
 
-  if (!currentStep) {
-    return <div>Carregando...</div>
-  }
-
   // Initialize step 3 with license plate from step 2
   useEffect(() => {
     if (currentStep?.id === 'budgetPlateConfirmation' && !currentValue && stepData.budgetDescription) {
       updateCurrentStepData(stepData.budgetDescription as string)
     }
   }, [currentStep?.id, currentValue, stepData.budgetDescription, updateCurrentStepData])
+
+  if (!currentStep) {
+    return <div>Carregando...</div>
+  }
 
   // For confirmation step, use the license plate from step 2
   const getDisplayValue = () => {

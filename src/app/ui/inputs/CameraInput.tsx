@@ -59,7 +59,7 @@ export default function CameraInput({
     setIsFocused(false)
   }
 
-  // Inicializar OCR Worker otimizado para placas
+  // Inicializar OCR Worker com configurações robustas
   const initializeOCR = useCallback(async () => {
     if (workerRef.current) return workerRef.current
 
@@ -68,121 +68,205 @@ export default function CameraInput({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const worker: any = await createWorker()
       
-      setOcrStatus('Carregando idiomas...')
+      setOcrStatus('Carregando modelo OCR...')
       await worker.loadLanguage('eng')
       await worker.initialize('eng')
       
-      setOcrStatus('Configurando para placas...')
-      // Configurações específicas para placas brasileiras
+      setOcrStatus('Otimizando para placas...')
+      // Configurações otimizadas para placas de carro
       await worker.setParameters({
         tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
-        tessedit_pageseg_mode: '8', // Palavra única
-        tessedit_ocr_engine_mode: '1', // Neural network LSTM
-        preserve_interword_spaces: '0',
-        user_defined_dpi: '300',
+        tessedit_pageseg_mode: '6', // Uniform block of text
+        tessedit_ocr_engine_mode: '1', // LSTM engine
+        preserve_interword_spaces: '1',
+        user_defined_dpi: '150',
         tessjs_create_hocr: '0',
         tessjs_create_tsv: '0',
+        tessjs_create_pdf: '0',
+        textord_really_old_xheight: '1',
+        textord_min_xheight: '10',
+        classify_enable_learning: '0',
       })
 
       workerRef.current = worker
-      setOcrStatus('OCR pronto!')
+      setOcrStatus('')
+      console.log('✅ OCR Worker inicializado com sucesso')
       return worker
     } catch (error) {
-      console.error('Erro ao inicializar OCR:', error)
-      setOcrStatus('Erro no OCR')
+      console.error('❌ Erro ao inicializar OCR:', error)
+      setOcrStatus('Erro na inicialização')
       return null
     }
   }, [])
 
-  // Processar imagem com OCR real
+  // Pré-processar imagem para melhor OCR
+  const preprocessImage = (imageData: ImageData): HTMLCanvasElement => {
+    const canvas = document.createElement('canvas')
+    canvas.width = imageData.width
+    canvas.height = imageData.height
+    const ctx = canvas.getContext('2d')!
+    
+    // Colocar dados da imagem no canvas
+    ctx.putImageData(imageData, 0, 0)
+    
+    // Redimensionar para melhor resolução (OCR funciona melhor com imagens maiores)
+    const scaleFactor = 3
+    const scaledCanvas = document.createElement('canvas')
+    scaledCanvas.width = canvas.width * scaleFactor
+    scaledCanvas.height = canvas.height * scaleFactor
+    const scaledCtx = scaledCanvas.getContext('2d')!
+    
+    // Configurar para renderização de alta qualidade
+    scaledCtx.imageSmoothingEnabled = false
+    scaledCtx.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height)
+    
+    // Aplicar filtros para melhorar contraste
+    const finalCanvas = document.createElement('canvas')
+    finalCanvas.width = scaledCanvas.width
+    finalCanvas.height = scaledCanvas.height
+    const finalCtx = finalCanvas.getContext('2d')!
+    
+    // Converter para escala de cinza com alto contraste
+    finalCtx.filter = 'contrast(200%) brightness(120%) saturate(0%)'
+    finalCtx.drawImage(scaledCanvas, 0, 0)
+    
+    return finalCanvas
+  }
+
+  // Processar imagem com OCR otimizado
   const performRealOCR = useCallback(async (imageData: ImageData): Promise<string | null> => {
     try {
       const worker = await initializeOCR()
-      if (!worker) return null
+      if (!worker) {
+        console.log('❌ Worker OCR não disponível')
+        return null
+      }
 
-      setOcrStatus('Analisando imagem...')
+      setOcrStatus('Processando imagem...')
+      console.log('🔍 Iniciando processamento OCR...')
 
-      // Criar canvas temporário para pré-processamento
-      const tempCanvas = document.createElement('canvas')
-      tempCanvas.width = imageData.width
-      tempCanvas.height = imageData.height
-      const ctx = tempCanvas.getContext('2d')
+      // Pré-processar imagem para melhor OCR
+      const processedCanvas = preprocessImage(imageData)
       
-      if (!ctx) return null
-
-      // Aplicar pré-processamento para melhor OCR
-      ctx.putImageData(imageData, 0, 0)
+      setOcrStatus('Executando OCR...')
+      console.log('📝 Executando reconhecimento de texto...')
       
-      // Aumentar contraste e brilho
-      ctx.filter = 'contrast(150%) brightness(110%) grayscale(100%)'
-      ctx.drawImage(tempCanvas, 0, 0)
+      // Executar OCR com timeout
+      const ocrPromise = worker.recognize(processedCanvas)
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('OCR timeout')), 15000)
+      )
       
-      setOcrStatus('Detectando texto...')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result: any = await Promise.race([ocrPromise, timeoutPromise])
+      const { text, confidence } = result.data
       
-      // Executar OCR
-      const { data: { text, confidence } } = await worker.recognize(tempCanvas)
+      console.log(`📊 OCR Resultado: "${text.trim()}" (Confiança: ${confidence.toFixed(1)}%)`)
       
-      console.log(`OCR Raw: "${text}" (${confidence}% confiança)`)
-      
-      if (confidence > 10) { // Confiança mínima
+      // Aceitar qualquer resultado com confiança mínima
+      if (confidence > 1 && text.trim().length > 0) {
         return text.trim().toUpperCase()
       }
       
+      console.log('❌ Confiança muito baixa ou texto vazio')
       return null
+      
     } catch (error) {
-      console.error('Erro no OCR:', error)
-      setOcrStatus('Erro na detecção')
+      console.error('❌ Erro no OCR:', error)
+      setOcrStatus('Erro no processamento')
       return null
     }
   }, [initializeOCR])
 
-  // Processar texto detectado para extrair placa
+  // Algoritmo avançado para extrair placa do texto OCR
   const extractLicensePlate = useCallback((rawText: string): string | null => {
     if (!rawText) return null
     
-    // Limpar texto - apenas letras e números
-    const cleanText = rawText.replace(/[^A-Z0-9]/g, '')
-    console.log(`Texto limpo: "${cleanText}"`)
+    console.log(`🔤 Texto bruto OCR: "${rawText}"`)
     
-    // Padrões de placa brasileira
+    // Limpar e normalizar texto
+    const cleanText = rawText
+      .replace(/[^A-Z0-9\s]/g, '') // Remove símbolos
+      .replace(/\s+/g, '') // Remove espaços
+      .toUpperCase()
+    
+    console.log(`🧹 Texto limpo: "${cleanText}"`)
+    
+    // Tentar diferentes padrões de placa
     const patterns = [
-      /^([A-Z]{3})(\d{4})$/, // ABC1234 (padrão antigo)
-      /^([A-Z]{3})(\d{1})([A-Z]{1})(\d{2})$/, // ABC1D23 (Mercosul)
+      // Padrões exatos
+      /([A-Z]{3})(\d{4})/, // ABC1234
+      /([A-Z]{3})(\d{1}[A-Z]{1}\d{2})/, // ABC1D23 (Mercosul)
+      
+      // Padrões flexíveis
+      /([A-Z]{2,3})(\d{3,4})/, // Mínimo 2 letras, 3 números
+      /([A-Z]{3})(\d{1}[A-Z]{1}\d{1,2})/, // Mercosul flexível
+      
+      // Busca por qualquer sequência alfanumérica
+      /([A-Z]+)(\d+)([A-Z]*)(\d*)/, // Qualquer combinação
     ]
 
-    // Tentar extrair com padrões exatos
-    for (const pattern of patterns) {
+    for (let i = 0; i < patterns.length; i++) {
+      const pattern = patterns[i]
       const match = cleanText.match(pattern)
+      
       if (match) {
-        if (match[3]) {
-          // Mercosul: ABC1D23 -> ABC-1D23
-          return `${match[1]}-${match[2]}${match[3]}${match[4]}`
-        } else {
-          // Padrão: ABC1234 -> ABC-1234
-          return `${match[1]}-${match[2]}`
-        }
-      }
-    }
-
-    // Tentar extrair sequências que parecem placas
-    const plateMatches = [
-      cleanText.match(/([A-Z]{3})(\d{4})/), // ABC1234
-      cleanText.match(/([A-Z]{3})(\d{1}[A-Z]{1}\d{2})/), // ABC1D23
-      cleanText.match(/([A-Z]{2,3})(\d{3,4})/) // Qualquer sequência similar
-    ]
-
-    for (const match of plateMatches) {
-      if (match) {
-        const letters = match[1]
-        const numbers = match[2]
+        console.log(`✅ Padrão ${i + 1} encontrado:`, match)
         
-        if (letters.length >= 2 && numbers.length >= 3) {
-          return `${letters}-${numbers}`
+        let result = ''
+        
+        if (i <= 1) {
+          // Padrões principais
+          const letters = match[1]
+          const numbers = match[2]
+          
+          if (letters.length === 3 && (numbers.length === 4 || numbers.length === 4)) {
+            result = `${letters}-${numbers}`
+          }
+        } else if (i === 2) {
+          // Padrão flexível básico
+          const letters = match[1]
+          const numbers = match[2]
+          
+          if (letters.length >= 2 && numbers.length >= 3) {
+            result = `${letters}-${numbers}`
+          }
+        } else if (i === 3) {
+          // Mercosul flexível
+          const letters = match[1]
+          const numbers = match[2]
+          
+          if (letters.length === 3 && numbers.length >= 3) {
+            result = `${letters}-${numbers}`
+          }
+        } else {
+          // Combinar todas as partes
+          const letters = match[1] + (match[3] || '')
+          const numbers = match[2] + (match[4] || '')
+          
+          if (letters.length >= 2 && numbers.length >= 3) {
+            result = `${letters}-${numbers}`
+          }
+        }
+        
+        if (result) {
+          console.log(`🎯 Placa extraída: "${result}"`)
+          return result
         }
       }
     }
-
-    console.log('Nenhum padrão de placa encontrado')
+    
+    // Último recurso: tentar extrair qualquer sequência alfanumérica
+    const fallbackMatch = cleanText.match(/([A-Z]{2,})(\d{3,})/)
+    if (fallbackMatch) {
+      const letters = fallbackMatch[1].substring(0, 3) // Máximo 3 letras
+      const numbers = fallbackMatch[2].substring(0, 4) // Máximo 4 números
+      const result = `${letters}-${numbers}`
+      console.log(`🔄 Fallback - Placa extraída: "${result}"`)
+      return result
+    }
+    
+    console.log('❌ Nenhuma placa encontrada no texto')
     return null
   }, [])
 
@@ -207,14 +291,17 @@ export default function CameraInput({
       // Capturar frame atual
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
 
-      // Calcular área de escaneamento (retângulo central)
-      const scanWidth = Math.min(SCANNING_AREA_WIDTH * 2, canvas.width * 0.8)
-      const scanHeight = Math.min(SCANNING_AREA_HEIGHT * 2, canvas.height * 0.4)
+      // Calcular área de escaneamento otimizada para placas
+      const scanWidth = Math.min(400, canvas.width * 0.9) // Área maior
+      const scanHeight = Math.min(150, canvas.height * 0.4) // Altura adequada para placa
       const scanX = (canvas.width - scanWidth) / 2
       const scanY = (canvas.height - scanHeight) / 2
 
-      // Extrair apenas a região da placa
+      console.log(`📐 Área de escaneamento: ${scanWidth}x${scanHeight} em (${scanX}, ${scanY})`)
+
+      // Extrair região da placa com dados brutos
       const imageData = ctx.getImageData(scanX, scanY, scanWidth, scanHeight)
+      console.log(`📊 ImageData extraída: ${imageData.width}x${imageData.height}, ${imageData.data.length} pixels`)
       
       setScanProgress(30)
       
@@ -222,32 +309,56 @@ export default function CameraInput({
       const rawText = await performRealOCR(imageData)
       setScanProgress(70)
       
-      if (rawText) {
-        console.log('Texto detectado pelo OCR:', rawText)
+      if (rawText && rawText.length > 0) {
+        console.log('✅ Texto detectado pelo OCR:', rawText)
+        setScanProgress(70)
         
         // Extrair placa do texto detectado
         const extractedPlate = extractLicensePlate(rawText)
-        setScanProgress(90)
+        setScanProgress(85)
         
-        if (extractedPlate && validateLicensePlate(extractedPlate)) {
-          console.log('✅ Placa válida encontrada:', extractedPlate)
-          setScanProgress(100)
-          setOcrStatus('Placa detectada!')
+        if (extractedPlate) {
+          console.log('🎯 Placa extraída:', extractedPlate)
           
-          // Delay para mostrar sucesso
-          setTimeout(() => {
-            onChange(formatLicensePlate(extractedPlate))
-            closeCamera()
-          }, 1000)
+          // Tentar validar - aceitar mesmo se não passar na validação estrita
+          const isStrictlyValid = validateLicensePlate(extractedPlate)
           
-          return true
+          if (isStrictlyValid) {
+            console.log('✅ Placa válida (validação estrita):', extractedPlate)
+            setScanProgress(100)
+            setOcrStatus('Placa válida detectada!')
+            
+            setTimeout(() => {
+              onChange(formatLicensePlate(extractedPlate))
+              closeCamera()
+            }, 800)
+            
+            return true
+          } else {
+            // Aceitar placa mesmo sem validação estrita se parecer válida
+            if (extractedPlate.match(/^[A-Z]{2,3}-[A-Z0-9]{3,4}$/)) {
+              console.log('⚠️ Placa parcial aceita:', extractedPlate)
+              setScanProgress(100)
+              setOcrStatus('Placa detectada (verificar)')
+              
+              setTimeout(() => {
+                onChange(extractedPlate)
+                closeCamera()
+              }, 800)
+              
+              return true
+            } else {
+              console.log('❌ Placa extraída inválida:', extractedPlate)
+              setOcrStatus(`Detectado: ${extractedPlate} (inválido)`)
+            }
+          }
         } else {
-          console.log('❌ Texto detectado não é uma placa válida:', rawText)
-          setOcrStatus('Placa não reconhecida')
+          console.log('❌ Não foi possível extrair placa do texto:', rawText)
+          setOcrStatus(`Texto: "${rawText}" (sem placa)`)
         }
       } else {
-        console.log('❌ Nenhum texto detectado')
-        setOcrStatus('Nenhum texto encontrado')
+        console.log('❌ OCR não retornou texto')
+        setOcrStatus('Nenhum texto detectado')
       }
       
       // Reset após falha

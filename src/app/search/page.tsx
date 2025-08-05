@@ -3,7 +3,9 @@
 import React, { useState, useCallback } from 'react'
 import Image from 'next/image'
 import { useProductSearch } from '../hooks/useProductSearch'
+import { useCart } from '../contexts/CartContext'
 import BackButton from '../ui/BackButton'
+import CartHeader from '../ui/headers/CartHeader'
 import SearchModal from '../ui/modals/SearchModal'
 import ProductsFoundModal from '../ui/modals/ProductsFoundModal'
 
@@ -17,6 +19,8 @@ export default function SearchPage() {
   const [showProductsModal, setShowProductsModal] = useState(false)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [selectedItems, setSelectedItems] = useState<any[]>([])
+
+  const { addItem } = useCart()
 
   const {
     isLoading,
@@ -58,7 +62,7 @@ export default function SearchPage() {
   }
 
   const handleItemAdd = (item: any) => {
-    console.log('Item adicionado:', item)
+    addItem(item)
   }
 
   const formatPlaca = (value: string) => {
@@ -81,7 +85,8 @@ export default function SearchPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] max-w-[360px] mx-auto flex flex-col">
+    <div className="min-h-screen bg-[#F5F5F5] max-w-[360px] mx-auto flex flex-col relative">
+      <CartHeader />
       {/* Header */}
       <div className="bg-white px-6 py-4 border-b border-[#E5E7EB]">
         <div className="flex items-center gap-4 mb-4">

@@ -105,6 +105,7 @@ export default function InputScreen({
           onChange={setValue}
           placeholder={placeholder}
           autoFocus={autoFocus}
+          placa={stepData?.budgetDescription as string}
         />
       
       case 'budgetconfirmation':

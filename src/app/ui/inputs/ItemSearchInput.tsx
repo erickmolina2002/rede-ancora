@@ -5,6 +5,7 @@ import Image from 'next/image'
 import SearchModal from '../modals/SearchModal'
 import SelectedItemsList from '../lists/SelectedItemsList'
 import { Item } from '../cards/ItemCard'
+import { ProductItem } from '../cards/ProductCard'
 
 type ItemSearchInputProps = {
   value: string
@@ -15,6 +16,7 @@ type ItemSearchInputProps = {
   className?: string
   autoFocus?: boolean
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | HTMLDivElement>) => void
+  placa?: string
 }
 
 export default function ItemSearchInput({
@@ -23,7 +25,8 @@ export default function ItemSearchInput({
   placeholder = "Adicionar serviços...",
   label,
   className = "",
-  onKeyDown
+  onKeyDown,
+  placa
 }: ItemSearchInputProps) {
   const [isFocused, setIsFocused] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -45,16 +48,24 @@ export default function ItemSearchInput({
     setIsModalOpen(true)
   }
 
-  const handleItemAdd = (item: Item) => {
+  const handleItemAdd = (item: Item | ProductItem) => {
+    // Convert ProductItem to Item format for compatibility
+    const normalizedItem: Item = 'nomeProduto' in item ? {
+      id: item.id.toString(),
+      name: item.nomeProduto,
+      subtitle: `${item.marca} - ${item.codigoReferencia}`,
+      price: 0 // Products from API don't have price, setting to 0
+    } : item as Item
+
     // Check if item is already added
-    if (!selectedItems.find(selected => selected.id === item.id)) {
-      const newItems = [...selectedItems, item]
+    if (!selectedItems.find(selected => selected.id === normalizedItem.id)) {
+      const newItems = [...selectedItems, normalizedItem]
       setSelectedItems(newItems)
       
       // Update the form value with selected items summary
       const itemsText = newItems.length === 1 
-        ? `${newItems.length} serviço selecionado`
-        : `${newItems.length} serviços selecionados`
+        ? `${newItems.length} produto selecionado`
+        : `${newItems.length} produtos selecionados`
       onChange(itemsText)
     }
     // Don't close modal - let user continue adding items
@@ -68,8 +79,8 @@ export default function ItemSearchInput({
       onChange('')
     } else {
       const itemsText = newItems.length === 1 
-        ? `${newItems.length} serviço selecionado`
-        : `${newItems.length} serviços selecionados`
+        ? `${newItems.length} produto selecionado`
+        : `${newItems.length} produtos selecionados`
       onChange(itemsText)
     }
   }
@@ -82,8 +93,8 @@ export default function ItemSearchInput({
     if (selectedItems.length === 0) return ''
     
     return selectedItems.length === 1 
-      ? `${selectedItems.length} serviço selecionado`
-      : `${selectedItems.length} serviços selecionados`
+      ? `${selectedItems.length} produto selecionado`
+      : `${selectedItems.length} produtos selecionados`
   }
 
   return (
@@ -161,6 +172,7 @@ export default function ItemSearchInput({
         isOpen={isModalOpen}
         onClose={handleModalClose}
         onItemAdd={handleItemAdd}
+        placa={placa}
       />
     </div>
   )

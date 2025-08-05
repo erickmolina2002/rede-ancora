@@ -5,9 +5,7 @@ import Link from "next/link";
 export default function Home() {
   const routes = [
     { name: "Budget", path: "/budget", icon: "💰" },
-    { name: "Onboarding", path: "/onboarding", icon: "👋" },
-    { name: "Profile", path: "/profile", icon: "👤" },
-    { name: "Product", path: "/product", icon: "📦" }
+    { name: "Buscar Produtos", path: "/search", icon: "🔍" },
   ];
 
   return (
@@ -21,7 +19,7 @@ export default function Home() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-6 w-full">
+      <div className="gap-6 w-full">
         {routes.map((route) => (
           <Link
             key={route.path}

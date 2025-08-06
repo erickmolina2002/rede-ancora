@@ -120,9 +120,9 @@ export default function WhatsAppSendInput({
       }
       
       // Calculate totals based on real products
-      const partsTotal = partsItems.reduce((total, item) => total + (item.price * item.quantity), 0)
+      const partsTotal = partsItems.reduce((total, item) => total + item.price, 0)
       const servicesTotal = serviceItems.length > 0 
-        ? serviceItems.reduce((total, item) => total + (item.price * item.quantity), 0)
+        ? serviceItems.reduce((total, item) => total + item.price, 0)
         : servicePrice
       const grandTotal = partsTotal + servicesTotal
       

@@ -64,8 +64,8 @@ export const validateMinimumItems = (value: string): boolean => {
   if (!value || value.trim() === '') return false
   
   // Check if the value indicates items were selected
-  // The ItemSearchInput sets values like "2 serviços selecionados"
-  const itemCountMatch = value.match(/(\d+)\s+serviços?\s+selecionados?/i)
+  // The ItemSearchInput sets values like "2 produtos selecionados" or "2 serviços selecionados"
+  const itemCountMatch = value.match(/(\d+)\s+(produtos?|serviços?)\s+selecionados?/i)
   if (itemCountMatch) {
     const count = parseInt(itemCountMatch[1], 10)
     return count >= 1

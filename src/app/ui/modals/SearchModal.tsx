@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Button from '../Button'
 import { useCart } from '../../contexts/CartContext'
+import { useProductsBudget } from '../../contexts/ProductsBudgetContext'
 import { useProductSearch } from '../../hooks/useProductSearch'
 import ProductsFoundModal from './ProductsFoundModal'
 
@@ -27,6 +28,7 @@ export default function SearchModal({
   const [searchFilter, setSearchFilter] = useState<string>('')
 
   const { getTotalItems } = useCart()
+  const { hasProducts } = useProductsBudget()
   const router = useRouter()
 
   const {
@@ -67,8 +69,8 @@ export default function SearchModal({
   }
 
   const handleClose = () => {
-    if (getTotalItems() > 0) {
-      // Se tem produtos no carrinho, vai para o step budgetServices
+    if (hasProducts()) {
+      // Se tem produtos no contexto de orçamento, vai para o step budgetServices
       setIsAnimating(true)
       setTimeout(() => {
         setSelectedProduct('')
@@ -228,14 +230,14 @@ export default function SearchModal({
         </div>
 
         {/* Footer */}
-        {getTotalItems() > 0 && (
+        {hasProducts() && (
           <div className="flex-shrink-0 p-6">
             <div className="flex gap-3">
               <Button 
                 onClick={handleClose} 
                 className="w-full h-[48px] rounded-[20px] bg-[#001B42] text-white hover:bg-[#002B52] transition-colors"
               >
-                Continuar ({getTotalItems()} no orçamento)
+Continuar com produtos
               </Button>
             </div>
             <p className="text-center text-[12px] text-[#6B7280] mt-2">

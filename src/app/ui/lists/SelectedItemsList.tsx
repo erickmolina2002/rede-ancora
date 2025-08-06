@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useCart } from '../../contexts/CartContext'
 import { Item } from '../cards/ItemCard'
 
 type SelectedItemsListProps = {
@@ -16,6 +17,12 @@ export default function SelectedItemsList({
 }: SelectedItemsListProps) {
   const [animatedItems, setAnimatedItems] = useState<string[]>([])
   const [removingItems, setRemovingItems] = useState<string[]>([])
+
+  const { items: cartItems } = useCart()
+
+  const isCartItem = (itemId: string) => {
+    return cartItems.some(cartItem => cartItem.id.toString() === itemId)
+  }
 
   const getTotalValue = () => {
     return items.reduce((total, item) => total + item.price, 0)
@@ -62,11 +69,16 @@ export default function SelectedItemsList({
         {items.map((item, index) => {
           const isRemoving = removingItems.includes(item.id)
           const isNew = !animatedItems.includes(item.id)
+          const fromCart = isCartItem(item.id)
           
           return (
             <div 
               key={item.id} 
-              className={`bg-white border border-[#E5E7EB] rounded-lg p-3 hover:border-[#D1D5DB] transition-all duration-300 transform ${
+              className={`relative bg-white border rounded-lg p-3 hover:border-[#D1D5DB] transition-all duration-300 transform ${
+                fromCart 
+                  ? 'border-[#059669] bg-green-50'
+                  : 'border-[#E5E7EB]'
+              } ${
                 isRemoving 
                   ? 'animate-out fade-out slide-out-to-right scale-95 duration-300'
                   : isNew 
@@ -77,8 +89,16 @@ export default function SelectedItemsList({
                 animationDelay: isNew ? `${index * 100}ms` : '0ms'
               }}
             >
+              {fromCart && (
+                <div className="absolute top-2 right-2">
+                  <span className="text-[10px] px-2 py-1 bg-green-500 text-white rounded-full font-medium">
+                    Do orçamento
+                  </span>
+                </div>
+              )}
+              
               <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 pr-16">
                   <h4 className="text-[14px] font-medium text-[#242424] mb-1">
                     {item.name}
                   </h4>
@@ -90,7 +110,7 @@ export default function SelectedItemsList({
                   </p>
                 </div>
                 
-                {showRemoveButton && onRemove && (
+                {showRemoveButton && onRemove && !fromCart && (
                   <button
                     onClick={() => handleRemove(item.id)}
                     className="ml-3 flex-shrink-0 w-6 h-6 text-[#6B7280] hover:text-[#EF4444] hover:scale-110 transition-all duration-200 flex items-center justify-center"

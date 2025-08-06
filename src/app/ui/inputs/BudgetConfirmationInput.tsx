@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { useCart } from '../../contexts/CartContext'
+import { useProductsBudget } from '../../contexts/ProductsBudgetContext'
 
 type BudgetConfirmationInputProps = {
   value: string
@@ -24,43 +24,19 @@ export default function BudgetConfirmationInput({
 }: BudgetConfirmationInputProps) {
   const [editableServicePrice, setEditableServicePrice] = useState<string>('')
   const [isEditingService, setIsEditingService] = useState(false)
-  const [productPrices, setProductPrices] = useState<{ [key: number]: number }>({})
+  const { products, getTotalAmount } = useProductsBudget()
 
-  const { items: cartItems } = useCart()
-
-  // Generate random price for products (60-300 reais, round values)
-  const generateRandomPrice = () => {
-    const min = 60
-    const max = 300
-    const randomValue = Math.floor(Math.random() * (max - min + 1)) + min
-    // Round to nearest 10 for cleaner values
-    return Math.round(randomValue / 10) * 10
-  }
-
-  // Initialize product prices
-  useEffect(() => {
-    const newPrices: { [key: number]: number } = {}
-    cartItems.forEach(item => {
-      if (!productPrices[item.id]) {
-        newPrices[item.id] = generateRandomPrice()
-      } else {
-        newPrices[item.id] = productPrices[item.id]
-      }
-    })
-    if (Object.keys(newPrices).length > 0) {
-      setProductPrices(newPrices)
-    }
-  }, [cartItems])
-
-  // Convert cart items to selected services format
+  // Convert products to selected services format
   const getSelectedServices = () => {
-    return cartItems.map(item => ({
-      id: item.id.toString(),
-      name: item.nomeProduto,
-      price: productPrices[item.id] || generateRandomPrice(),
+    return products.map(product => ({
+      id: product.id.toString(),
+      name: product.name,
+      price: product.totalPrice,
+      unitPrice: product.unitPrice,
+      quantity: product.quantity,
       type: 'parts' as const,
-      brand: item.marca,
-      code: item.codigoReferencia
+      brand: product.brand,
+      code: product.code
     }))
   }
 
@@ -82,11 +58,7 @@ export default function BudgetConfirmationInput({
   const originalServicePrice = getServicePrice()
   const currentServicePrice = getCurrentServicePrice()
   
-  const partsPrice = selectedServices
-    .filter(service => service.type === 'parts')
-    .reduce((total, service) => total + service.price, 0)
-  
-  const totalPartsPrice = partsPrice
+  const totalPartsPrice = getTotalAmount()
   const totalServicePrice = currentServicePrice
   const grandTotal = totalPartsPrice + totalServicePrice
 
@@ -161,14 +133,14 @@ export default function BudgetConfirmationInput({
           </div>
         </div>
 
-        {/* Selected Products from Cart */}
-        {selectedServices.length > 0 && (
+        {/* Selected Products from Budget Context */}
+        {products.length > 0 && (
           <div className="space-y-3">
             <h4 className="text-[16px] font-medium text-[#242424]">
-              Produtos Selecionados ({selectedServices.length})
+              Produtos Selecionados ({products.length})
             </h4>
             <div className="space-y-2">
-              {selectedServices.map((product) => (
+              {products.map((product) => (
                 <div 
                   key={product.id} 
                   className="flex justify-between items-start p-3 bg-white border border-[#E5E7EB] rounded-lg animate-in slide-in-from-left duration-300"
@@ -179,20 +151,27 @@ export default function BudgetConfirmationInput({
                     </div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-[12px] text-[#6B7280]">
-                        {(product as any).brand}
+                        {product.brand}
                       </span>
                       <span className="text-[12px] text-[#9CA3AF]">•</span>
                       <span className="text-[12px] text-[#6B7280]">
-                        {(product as any).code}
+                        {product.code}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[12px] text-[#6B7280]">
+                        {formatPrice(product.unitPrice)} × {product.quantity}
                       </span>
                     </div>
                     <span className="text-[12px] px-2 py-1 rounded-full bg-blue-100 text-blue-800">
                       Peça
                     </span>
                   </div>
-                  <span className="text-[14px] font-medium text-[#242424]">
-                    {formatPrice(product.price)}
-                  </span>
+                  <div className="text-right">
+                    <span className="text-[14px] font-medium text-[#242424]">
+                      {formatPrice(product.totalPrice)}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>

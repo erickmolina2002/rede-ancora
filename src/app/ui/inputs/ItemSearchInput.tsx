@@ -1,9 +1,11 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import SearchModal from '../modals/SearchModal'
 import SelectedItemsList from '../lists/SelectedItemsList'
+import EnhancedProductsList from '../lists/EnhancedProductsList'
+import { useCart } from '../../contexts/CartContext'
 import { Item } from '../cards/ItemCard'
 import { ProductItem } from '../cards/ProductCard'
 
@@ -32,7 +34,25 @@ export default function ItemSearchInput({
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedItems, setSelectedItems] = useState<Item[]>([])
   const [isClicked, setIsClicked] = useState(false)
-  const hasItems = selectedItems.length > 0
+  const [productsTotal, setProductsTotal] = useState(0)
+  
+  const { items: cartItems } = useCart()
+  
+  // Convert cart items to Item format for display
+  const cartAsItems: Item[] = cartItems.map(item => ({
+    id: item.id.toString(),
+    name: item.nomeProduto,
+    subtitle: `${item.marca} - ${item.codigoReferencia}`,
+    price: 0
+  }))
+  
+  // Combine cart items with manually added items (avoiding duplicates)
+  const allSelectedItems = [
+    ...cartAsItems,
+    ...selectedItems.filter(item => !cartAsItems.find(cartItem => cartItem.id === item.id))
+  ]
+  
+  const hasItems = allSelectedItems.length > 0
 
   const handleFocus = () => {
     setIsFocused(true)
@@ -57,30 +77,39 @@ export default function ItemSearchInput({
       price: 0 // Products from API don't have price, setting to 0
     } : item as Item
 
-    // Check if item is already added
-    if (!selectedItems.find(selected => selected.id === normalizedItem.id)) {
+    // Check if item is already added (including cart items)
+    if (!allSelectedItems.find(selected => selected.id === normalizedItem.id)) {
       const newItems = [...selectedItems, normalizedItem]
       setSelectedItems(newItems)
       
-      // Update the form value with selected items summary
-      const itemsText = newItems.length === 1 
-        ? `${newItems.length} produto selecionado`
-        : `${newItems.length} produtos selecionados`
+      // Update the form value with total items count
+      const totalItems = cartAsItems.length + newItems.length
+      const itemsText = totalItems === 1 
+        ? `${totalItems} produto selecionado`
+        : `${totalItems} produtos selecionados`
       onChange(itemsText)
     }
     // Don't close modal - let user continue adding items
   }
 
   const handleItemRemove = (itemId: string) => {
+    // Only allow removing manually added items, not cart items
+    const isCartItem = cartAsItems.find(item => item.id === itemId)
+    if (isCartItem) {
+      // Don't remove cart items from here - they should be managed by the cart
+      return
+    }
+    
     const newItems = selectedItems.filter(item => item.id !== itemId)
     setSelectedItems(newItems)
     
-    if (newItems.length === 0 || value === '') {
+    const totalItems = cartAsItems.length + newItems.length
+    if (totalItems === 0) {
       onChange('')
     } else {
-      const itemsText = newItems.length === 1 
-        ? `${newItems.length} produto selecionado`
-        : `${newItems.length} produtos selecionados`
+      const itemsText = totalItems === 1 
+        ? `${totalItems} produto selecionado`
+        : `${totalItems} produtos selecionados`
       onChange(itemsText)
     }
   }
@@ -90,12 +119,25 @@ export default function ItemSearchInput({
   }
 
   const getDisplayValue = () => {
-    if (selectedItems.length === 0) return ''
+    if (allSelectedItems.length === 0) return ''
     
-    return selectedItems.length === 1 
-      ? `${selectedItems.length} produto selecionado`
-      : `${selectedItems.length} produtos selecionados`
+    return allSelectedItems.length === 1 
+      ? `${allSelectedItems.length} produto selecionado`
+      : `${allSelectedItems.length} produtos selecionados`
   }
+
+  // Update form value when cart items change
+  useEffect(() => {
+    const totalItems = allSelectedItems.length
+    if (totalItems > 0) {
+      const itemsText = totalItems === 1 
+        ? `${totalItems} produto selecionado`
+        : `${totalItems} produtos selecionados`
+      onChange(itemsText)
+    } else if (cartItems.length === 0 && selectedItems.length === 0) {
+      onChange('')
+    }
+  }, [cartItems, selectedItems, onChange, allSelectedItems.length])
 
   return (
     <div className={`w-full ${className}`}>
@@ -160,12 +202,22 @@ export default function ItemSearchInput({
         </div>
       )}
 
-      {/* Selected Items List */}
-      <SelectedItemsList 
-        items={selectedItems}
-        onRemove={handleItemRemove}
-        showRemoveButton={true}
-      />
+      {/* Enhanced Products List - Shows cart items with quantity and pricing */}
+      {cartItems.length > 0 && (
+        <EnhancedProductsList 
+          cartItems={cartItems}
+          onTotalChange={setProductsTotal}
+        />
+      )}
+
+      {/* Selected Items List - Shows manually added items only */}
+      {selectedItems.length > 0 && (
+        <SelectedItemsList 
+          items={selectedItems}
+          onRemove={handleItemRemove}
+          showRemoveButton={true}
+        />
+      )}
 
       {/* Search Modal */}
       <SearchModal

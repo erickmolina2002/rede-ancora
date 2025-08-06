@@ -74,15 +74,42 @@ export default function WhatsAppSendInput({
       const vehiclePlate = String(stepData.budgetDescription || stepData.budgetPlateConfirmation || 'N/A')
       const budgetValue = String(stepData.budgetValue || '0')
       
-      // Mock selected services for demonstration
-      const mockSelectedServices = [
-        { id: '1', name: 'Troca de Óleo', price: 89.90, type: 'service' },
-        { id: '2', name: 'Filtro de Óleo', price: 25.00, type: 'parts' },
-        { id: '4', name: 'Pastilhas de Freio', price: 180.00, type: 'parts' },
-        { id: '5', name: 'Instalação de Pastilhas', price: 80.00, type: 'service' }
-      ]
+      // Get real selected products from stepData instead of mock data
+      const selectedProducts = (stepData.selectedProducts as Array<{
+        id: number;
+        name?: string;
+        nomeProduto?: string;
+        totalPrice?: number;
+        unitPrice?: number;
+        quantity?: number;
+      }>) || []
       
-      const partsItems = mockSelectedServices.filter(service => service.type === 'parts')
+      // If no products in stepData, create from budget services text
+      let realProducts = []
+      if (selectedProducts.length > 0) {
+        realProducts = selectedProducts.map((product, index) => ({
+          id: product.id || index + 1,
+          name: product.name || product.nomeProduto || `Produto ${index + 1}`,
+          price: product.totalPrice || product.unitPrice || 0,
+          quantity: product.quantity || 1,
+          type: 'parts'
+        }))
+      } else {
+        // Fallback: parse budget services text if available
+        const budgetServices = String(stepData.budgetServices || '')
+        if (budgetServices) {
+          realProducts = [{
+            id: 1,
+            name: budgetServices,
+            price: parseFloat(String(budgetValue).replace(/[^\d,]/g, '').replace(',', '.')) || 0,
+            quantity: 1,
+            type: 'service'
+          }]
+        }
+      }
+      
+      const partsItems = realProducts.filter(item => item.type === 'parts')
+      const serviceItems = realProducts.filter(item => item.type === 'service')
       const servicePrice = parseFloat(String(budgetValue).replace(/[^\d,]/g, '').replace(',', '.')) || 0
       
       const formatPrice = (price: number) => {
@@ -92,8 +119,12 @@ export default function WhatsAppSendInput({
         }).format(price)
       }
       
-      const partsTotal = partsItems.reduce((total, item) => total + item.price, 0)
-      const grandTotal = partsTotal + servicePrice
+      // Calculate totals based on real products
+      const partsTotal = partsItems.reduce((total, item) => total + (item.price * item.quantity), 0)
+      const servicesTotal = serviceItems.length > 0 
+        ? serviceItems.reduce((total, item) => total + (item.price * item.quantity), 0)
+        : servicePrice
+      const grandTotal = partsTotal + servicesTotal
       
       // Get current time for professional greeting
       const now = new Date()
@@ -110,15 +141,31 @@ export default function WhatsAppSendInput({
       message += `*ORÇAMENTO - ${budgetName.toUpperCase()}*\n`
       message += `*Veículo:* ${vehiclePlate}\n\n`
       
+      // Show parts with quantities and individual prices
       if (partsItems.length > 0) {
         message += `*PEÇAS NECESSÁRIAS:*\n`
         partsItems.forEach(item => {
-          message += `- ${item.name} - ${formatPrice(item.price)}\n`
+          if (item.quantity > 1) {
+            message += `- ${item.name} (${item.quantity}x) - ${formatPrice(item.price / item.quantity)} cada = ${formatPrice(item.price)}\n`
+          } else {
+            message += `- ${item.name} - ${formatPrice(item.price)}\n`
+          }
         })
         message += `*Subtotal Peças:* ${formatPrice(partsTotal)}\n\n`
       }
       
-      if (servicePrice > 0) {
+      // Show services or labor
+      if (serviceItems.length > 0) {
+        message += `*SERVIÇOS:*\n`
+        serviceItems.forEach(item => {
+          if (item.quantity > 1) {
+            message += `- ${item.name} (${item.quantity}x) - ${formatPrice(item.price / item.quantity)} cada = ${formatPrice(item.price)}\n`
+          } else {
+            message += `- ${item.name} - ${formatPrice(item.price)}\n`
+          }
+        })
+        message += `*Subtotal Serviços:* ${formatPrice(servicesTotal)}\n\n`
+      } else if (servicePrice > 0) {
         message += `*MÃO DE OBRA:*\n`
         message += `- Serviço especializado - ${formatPrice(servicePrice)}\n\n`
       }

@@ -4,7 +4,7 @@ import React, { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import InputScreen from '../ui/InputScreen'
 import { useStepFlow } from '../hooks/useStepFlow'
-import { useCart } from '../contexts/CartContext'
+import { useProductsBudget } from '../contexts/ProductsBudgetContext'
 import { budgetSteps } from '../config/budgetSteps'
 
 export default function BudgetPage() {
@@ -12,7 +12,7 @@ export default function BudgetPage() {
   const searchParams = useSearchParams()
   const initialStep = parseInt(searchParams.get('step') || '0')
   
-  const { items: cartItems, getTotalItems } = useCart()
+  const { products, getTotalItems } = useProductsBudget()
   
   const {
     currentStep,
@@ -27,12 +27,13 @@ export default function BudgetPage() {
     steps: budgetSteps,
     initialStepIndex: initialStep,
     initialData: {
-      selectedProducts: cartItems,
-      totalProducts: getTotalItems()
+      selectedProducts: products,
+      totalProducts: getTotalItems(),
+      totalAmount: products.reduce((sum, p) => sum + p.totalPrice, 0)
     },
     onComplete: (data) => {
       console.log('Orçamento completo:', data)
-      console.log('Produtos incluídos:', cartItems)
+      console.log('Produtos incluídos:', products)
     }
   })
 
@@ -60,17 +61,17 @@ export default function BudgetPage() {
     router.push('/')
   }
 
-  // Automatically populate budgetServices step with cart items
+  // Automatically populate budgetServices step with products
   useEffect(() => {
-    if (currentStep?.id === 'budgetServices' && cartItems.length > 0) {
-      // Se estiver no step budgetServices e tiver produtos no carrinho, adicionar automaticamente
-      const productsValue = cartItems.map(item => item.nomeProduto).join(', ')
+    if (currentStep?.id === 'budgetServices' && products.length > 0) {
+      // Se estiver no step budgetServices e tiver produtos no contexto, adicionar automaticamente
+      const productsValue = products.map(product => product.name).join(', ')
       if (!currentValue || currentValue !== productsValue) {
         updateCurrentStepData(productsValue)
-        console.log('Produtos adicionados automaticamente ao step budgetServices:', cartItems)
+        console.log('Produtos adicionados automaticamente ao step budgetServices:', products)
       }
     }
-  }, [currentStep?.id, cartItems, currentValue, updateCurrentStepData])
+  }, [currentStep?.id, products, currentValue, updateCurrentStepData])
 
   // Initialize step 3 with license plate from step 2
   useEffect(() => {
@@ -117,7 +118,12 @@ export default function BudgetPage() {
       inputType={currentStep.inputType}
       inputComponent={currentStep.inputComponent}
       options={currentStep.options}
-      stepData={stepData}
+      stepData={{
+        ...stepData,
+        selectedProducts: products,
+        totalProducts: getTotalItems(),
+        totalAmount: products.reduce((sum, p) => sum + p.totalPrice, 0)
+      }}
       isLicensePlate={currentStep.id === 'budgetPlateConfirmation'}
     />
   )

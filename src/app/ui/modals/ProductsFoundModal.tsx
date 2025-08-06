@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import ProductCard, { ProductItem } from '../cards/ProductCard'
 import Button from '../Button'
 import { useCart } from '../../contexts/CartContext'
+import { useProductsBudget } from '../../contexts/ProductsBudgetContext'
 import { Produto } from '../../services/apiService'
 
 type ProductsFoundModalProps = {
@@ -42,6 +43,7 @@ export default function ProductsFoundModal({
   const [showSimilares, setShowSimilares] = useState(false)
   
   const { addItem } = useCart()
+  const { addProduct } = useProductsBudget()
   const router = useRouter()
 
   // Produtos principais (6 por página)
@@ -85,7 +87,9 @@ export default function ProductsFoundModal({
   const handleItemAdd = (item: ProductItem) => {
     const itemId = item.id.toString()
     if (!addedItems.includes(itemId)) {
+      // Add to both contexts for compatibility
       addItem(item)
+      addProduct(item)
       setAddedItems(prev => [...prev, itemId])
     }
   }

@@ -146,7 +146,8 @@ export default function WhatsAppSendInput({
         message += `*PEÇAS NECESSÁRIAS:*\n`
         partsItems.forEach(item => {
           if (item.quantity > 1) {
-            message += `- ${item.name} (${item.quantity}x) - ${formatPrice(item.price / item.quantity)} cada = ${formatPrice(item.price)}\n`
+            const unitPrice = item.price / item.quantity
+            message += `- ${item.name} (${item.quantity}x) - ${formatPrice(unitPrice)} cada = ${formatPrice(item.price)}\n`
           } else {
             message += `- ${item.name} - ${formatPrice(item.price)}\n`
           }
@@ -159,7 +160,8 @@ export default function WhatsAppSendInput({
         message += `*SERVIÇOS:*\n`
         serviceItems.forEach(item => {
           if (item.quantity > 1) {
-            message += `- ${item.name} (${item.quantity}x) - ${formatPrice(item.price / item.quantity)} cada = ${formatPrice(item.price)}\n`
+            const unitPrice = item.price / item.quantity
+            message += `- ${item.name} (${item.quantity}x) - ${formatPrice(unitPrice)} cada = ${formatPrice(item.price)}\n`
           } else {
             message += `- ${item.name} - ${formatPrice(item.price)}\n`
           }

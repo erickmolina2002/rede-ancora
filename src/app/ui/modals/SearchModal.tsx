@@ -1,7 +1,9 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Button from '../Button'
+import { useCart } from '../../contexts/CartContext'
 import { useProductSearch } from '../../hooks/useProductSearch'
 import ProductsFoundModal from './ProductsFoundModal'
 
@@ -9,7 +11,6 @@ type SearchModalProps = {
   isOpen: boolean
   onClose: () => void
   onProductSelect: (nomeProduto: string) => void
-  onItemAdd?: (item: any) => void
   placa?: string
 }
 
@@ -17,7 +18,6 @@ export default function SearchModal({
   isOpen,
   onClose,
   onProductSelect,
-  onItemAdd,
   placa
 }: SearchModalProps) {
   const [isAnimating, setIsAnimating] = useState(false)
@@ -25,6 +25,9 @@ export default function SearchModal({
   const [showProductsModal, setShowProductsModal] = useState(false)
   const [selectedProductName, setSelectedProductName] = useState<string>('')
   const [searchFilter, setSearchFilter] = useState<string>('')
+
+  const { getTotalItems } = useCart()
+  const router = useRouter()
 
   const {
     isLoading,
@@ -64,16 +67,33 @@ export default function SearchModal({
   }
 
   const handleClose = () => {
-    setIsAnimating(true)
-    setTimeout(() => {
-      setSelectedProduct('')
-      setSelectedProductName('')
-      setShowProductsModal(false)
-      setSearchFilter('')
-      setIsAnimating(false)
-      resetSearch()
-      onClose()
-    }, 200)
+    if (getTotalItems() > 0) {
+      // Se tem produtos no carrinho, vai para o step budgetServices
+      setIsAnimating(true)
+      setTimeout(() => {
+        setSelectedProduct('')
+        setSelectedProductName('')
+        setShowProductsModal(false)
+        setSearchFilter('')
+        setIsAnimating(false)
+        resetSearch()
+        onClose()
+        // Navegar após fechar o modal para o step "Adicione os serviços"
+        router.push('/budget?step=3')
+      }, 200)
+    } else {
+      // Se não tem produtos, apenas fecha o modal
+      setIsAnimating(true)
+      setTimeout(() => {
+        setSelectedProduct('')
+        setSelectedProductName('')
+        setShowProductsModal(false)
+        setSearchFilter('')
+        setIsAnimating(false)
+        resetSearch()
+        onClose()
+      }, 200)
+    }
   }
 
   // Fechar modal de produtos encontrados
@@ -82,14 +102,6 @@ export default function SearchModal({
     setSelectedProductName('')
   }
 
-  // Adicionar item do modal de produtos
-  const handleItemAdd = (item: any) => {
-    if (onItemAdd) {
-      onItemAdd(item)
-    }
-    // Também chamar a função original se existir
-    onProductSelect(selectedProductName)
-  }
 
   // Reset search when modal opens
   useEffect(() => {
@@ -113,17 +125,29 @@ export default function SearchModal({
           : 'animate-in slide-in-from-bottom'
         }`}>
         {/* Header */}
-        <div className="flex-shrink-0 px-6 py-2">
-
-          <div className="mb-2 mt-2">
-            <h3 className="text-[18px] font-semibold text-[#242424] mb-2">
-              Produtos Disponíveis
-            </h3>
-            <p className="text-[14px] text-[#6B7280]">
-              {produtosFiltrados.length} produtos {searchFilter ? 'encontrados' : 'disponíveis'} para a placa {placa}
-            </p>
+        <div className="flex-shrink-0 py-2">
+          <div className="flex items-center justify-between mb-2 mt-2 px-4">
+            <button
+              onClick={handleClose}
+              className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:text-[#242424] hover:bg-[#F3F4F6] rounded-full transition-all duration-200"
+              aria-label="Voltar"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="m15 18-6-6 6-6"/>
+              </svg>
+            </button>
+            
+            <div className="flex-1 text-center mx-4">
+              <h3 className="text-[18px] font-semibold text-[#242424] mb-1">
+                Produtos Disponíveis
+              </h3>
+              <p className="text-[14px] text-[#6B7280]">
+                {produtosFiltrados.length} produtos para a placa {placa}
+              </p>
+            </div>
+            
+            <div className="w-8 h-8"></div>
           </div>
-
         </div>
 
         {/* Content */}
@@ -204,23 +228,27 @@ export default function SearchModal({
         </div>
 
         {/* Footer */}
-        <div className="flex-shrink-0 p-6">
-          <div className="flex gap-3">
-            <Button 
-              onClick={handleClose} 
-              className="w-full h-[48px] rounded-[20px] bg-[#001B42] text-white hover:bg-[#002B52] transition-colors"
-            >
-              Voltar
-            </Button>
+        {getTotalItems() > 0 && (
+          <div className="flex-shrink-0 p-6">
+            <div className="flex gap-3">
+              <Button 
+                onClick={handleClose} 
+                className="w-full h-[48px] rounded-[20px] bg-[#001B42] text-white hover:bg-[#002B52] transition-colors"
+              >
+                Continuar ({getTotalItems()} no orçamento)
+              </Button>
+            </div>
+            <p className="text-center text-[12px] text-[#6B7280] mt-2">
+              {getTotalItems()} {getTotalItems() === 1 ? 'item adicionado ao orçamento' : 'itens adicionados ao orçamento'}
+            </p>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Products Found Modal */}
       <ProductsFoundModal
         isOpen={showProductsModal}
         onClose={handleProductsModalClose}
-        onItemAdd={handleItemAdd}
         produtos={produtosEncontrados}
         selectedProductName={selectedProductName}
         isLoading={isLoading}

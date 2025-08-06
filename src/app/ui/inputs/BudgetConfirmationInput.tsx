@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import { useCart } from '../../contexts/CartContext'
 
 type BudgetConfirmationInputProps = {
   value: string
@@ -23,22 +24,44 @@ export default function BudgetConfirmationInput({
 }: BudgetConfirmationInputProps) {
   const [editableServicePrice, setEditableServicePrice] = useState<string>('')
   const [isEditingService, setIsEditingService] = useState(false)
+  const [productPrices, setProductPrices] = useState<{ [key: number]: number }>({})
 
-  // Parse the selected services from step data
+  const { items: cartItems } = useCart()
+
+  // Generate random price for products (60-300 reais, round values)
+  const generateRandomPrice = () => {
+    const min = 60
+    const max = 300
+    const randomValue = Math.floor(Math.random() * (max - min + 1)) + min
+    // Round to nearest 10 for cleaner values
+    return Math.round(randomValue / 10) * 10
+  }
+
+  // Initialize product prices
+  useEffect(() => {
+    const newPrices: { [key: number]: number } = {}
+    cartItems.forEach(item => {
+      if (!productPrices[item.id]) {
+        newPrices[item.id] = generateRandomPrice()
+      } else {
+        newPrices[item.id] = productPrices[item.id]
+      }
+    })
+    if (Object.keys(newPrices).length > 0) {
+      setProductPrices(newPrices)
+    }
+  }, [cartItems])
+
+  // Convert cart items to selected services format
   const getSelectedServices = () => {
-    // This would typically come from the itemsearch step data
-    // For now, we'll extract from a mock structure or calculate from stored data
-    const servicesText = stepData.budgetServices as string || ''
-    
-    // Mock data for demonstration - in real app this would be stored properly
-    const mockSelectedServices = [
-      { id: '1', name: 'Troca de Óleo', price: 89.90, type: 'service' },
-      { id: '2', name: 'Filtro de Óleo', price: 25.00, type: 'parts' },
-      { id: '4', name: 'Pastilhas de Freio', price: 180.00, type: 'parts' },
-      { id: '5', name: 'Instalação de Pastilhas', price: 80.00, type: 'service' }
-    ]
-    
-    return servicesText ? mockSelectedServices : []
+    return cartItems.map(item => ({
+      id: item.id.toString(),
+      name: item.nomeProduto,
+      price: productPrices[item.id] || generateRandomPrice(),
+      type: 'parts' as const,
+      brand: item.marca,
+      code: item.codigoReferencia
+    }))
   }
 
   const getServicePrice = () => {
@@ -138,26 +161,37 @@ export default function BudgetConfirmationInput({
           </div>
         </div>
 
-        {/* Selected Parts from Step 4 - Only Parts */}
-        {selectedServices.filter(service => service.type === 'parts').length > 0 && (
+        {/* Selected Products from Cart */}
+        {selectedServices.length > 0 && (
           <div className="space-y-3">
-            <h4 className="text-[16px] font-medium text-[#242424]">Peças Selecionadas</h4>
+            <h4 className="text-[16px] font-medium text-[#242424]">
+              Produtos Selecionados ({selectedServices.length})
+            </h4>
             <div className="space-y-2">
-              {selectedServices
-                .filter(service => service.type === 'parts')
-                .map((service) => (
+              {selectedServices.map((product) => (
                 <div 
-                  key={service.id} 
-                  className="flex justify-between items-center p-3 bg-white border border-[#E5E7EB] rounded-lg animate-in slide-in-from-left duration-300"
+                  key={product.id} 
+                  className="flex justify-between items-start p-3 bg-white border border-[#E5E7EB] rounded-lg animate-in slide-in-from-left duration-300"
                 >
                   <div className="flex-1">
-                    <span className="text-[14px] text-[#242424]">{service.name}</span>
-                    <span className="ml-2 text-[12px] px-2 py-1 rounded-full bg-blue-100 text-blue-800">
+                    <div className="text-[14px] font-medium text-[#242424] mb-1">
+                      {product.name}
+                    </div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[12px] text-[#6B7280]">
+                        {(product as any).brand}
+                      </span>
+                      <span className="text-[12px] text-[#9CA3AF]">•</span>
+                      <span className="text-[12px] text-[#6B7280]">
+                        {(product as any).code}
+                      </span>
+                    </div>
+                    <span className="text-[12px] px-2 py-1 rounded-full bg-blue-100 text-blue-800">
                       Peça
                     </span>
                   </div>
                   <span className="text-[14px] font-medium text-[#242424]">
-                    {formatPrice(service.price)}
+                    {formatPrice(product.price)}
                   </span>
                 </div>
               ))}

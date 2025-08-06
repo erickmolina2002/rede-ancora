@@ -6,11 +6,12 @@ import { StepConfig, StepData } from '../types/step'
 export type UseStepFlowProps = {
   steps: StepConfig[]
   initialData?: StepData
+  initialStepIndex?: number
   onComplete?: (data: StepData) => void
 }
 
-export function useStepFlow({ steps, initialData = {}, onComplete }: UseStepFlowProps) {
-  const [currentStepIndex, setCurrentStepIndex] = useState(0)
+export function useStepFlow({ steps, initialData = {}, initialStepIndex = 0, onComplete }: UseStepFlowProps) {
+  const [currentStepIndex, setCurrentStepIndex] = useState(initialStepIndex)
   const [stepData, setStepData] = useState<StepData>(initialData)
   
   const currentStep = steps[currentStepIndex]
@@ -76,9 +77,9 @@ export function useStepFlow({ steps, initialData = {}, onComplete }: UseStepFlow
   }, [steps])
   
   const resetFlow = useCallback(() => {
-    setCurrentStepIndex(0)
+    setCurrentStepIndex(initialStepIndex)
     setStepData(initialData)
-  }, [initialData])
+  }, [initialData, initialStepIndex])
   
   const canGoBack = currentStep?.allowBack !== false && !isFirstStep
   const canContinue = validateCurrentStep()

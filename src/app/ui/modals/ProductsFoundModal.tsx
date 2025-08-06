@@ -1,14 +1,15 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import ProductCard, { ProductItem } from '../cards/ProductCard'
 import Button from '../Button'
+import { useCart } from '../../contexts/CartContext'
 import { Produto } from '../../services/apiService'
 
 type ProductsFoundModalProps = {
   isOpen: boolean
   onClose: () => void
-  onItemAdd: (item: ProductItem) => void
   produtos: Produto[]
   selectedProductName: string
   isLoading: boolean
@@ -28,7 +29,6 @@ type ProductsFoundModalProps = {
 export default function ProductsFoundModal({ 
   isOpen, 
   onClose, 
-  onItemAdd, 
   produtos,
   selectedProductName,
   isLoading,
@@ -40,6 +40,9 @@ export default function ProductsFoundModal({
   const [isAnimating, setIsAnimating] = useState(false)
   const [currentPage, setCurrentPage] = useState(0)
   const [showSimilares, setShowSimilares] = useState(false)
+  
+  const { addItem } = useCart()
+  const router = useRouter()
 
   // Produtos principais (6 por página)
   const produtosPaginados = useMemo(() => {
@@ -82,7 +85,7 @@ export default function ProductsFoundModal({
   const handleItemAdd = (item: ProductItem) => {
     const itemId = item.id.toString()
     if (!addedItems.includes(itemId)) {
-      onItemAdd(item)
+      addItem(item)
       setAddedItems(prev => [...prev, itemId])
     }
   }
@@ -121,36 +124,30 @@ export default function ProductsFoundModal({
       }`}>
         {/* Header */}
         <div className="flex-shrink-0 py-2">
-          <div className="flex items-center justify-between mb-2 mt-2">
-            <div className="flex items-center">
-              <button
-                onClick={handleClose}
-                className=" hover:bg-[#F3F4F6] rounded-[8px] transition-colors px-3 pb-[40px]"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="m15 18-6-6 6-6"/>
-                </svg>
-              </button>
-              <div>
-                <h2 className="text-[18px] font-semibold text-[#242424]">
-                  {selectedProductName}
-                </h2>
-                {placa && (
-                  <p className="text-[14px] text-[#6B7280]">
-                    Placa: {placa}
-                  </p>
-                )}
-              </div>
-            </div>
+          <div className="flex items-center justify-between mb-2 mt-2 px-4">
             <button
               onClick={handleClose}
               className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:text-[#242424] hover:bg-[#F3F4F6] rounded-full transition-all duration-200"
-              aria-label="Fechar"
+              aria-label="Voltar"
             >
-              ✕
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="m15 18-6-6 6-6"/>
+              </svg>
             </button>
+            
+            <div className="flex-1 text-center mx-4">
+              <h2 className="text-[18px] font-semibold text-[#242424]">
+                {selectedProductName}
+              </h2>
+              {placa && (
+                <p className="text-[14px] text-[#6B7280]">
+                  Placa: {placa}
+                </p>
+              )}
+            </div>
+            
+            <div className="w-8 h-8"></div>
           </div>
-
         </div>
 
         {/* Content */}
@@ -211,7 +208,7 @@ export default function ProductsFoundModal({
                       />
                       {isAdded && (
                         <div className="absolute top-2 right-12 bg-green-500 text-white text-xs px-2 py-1 rounded-full animate-in zoom-in duration-300">
-                          ✓ Adicionado
+                          ✓ No orçamento
                         </div>
                       )}
                     </div>
@@ -260,7 +257,7 @@ export default function ProductsFoundModal({
                           />
                           {isAdded && (
                             <div className="absolute top-2 right-12 bg-green-500 text-white text-xs px-2 py-1 rounded-full animate-in zoom-in duration-300">
-                              ✓ Adicionado
+                              ✓ No orçamento
                             </div>
                           )}
                         </div>
@@ -308,21 +305,21 @@ export default function ProductsFoundModal({
         </div>
 
         {/* Footer */}
-        <div className="flex-shrink-0 p-6 ">
-          <div className="flex gap-3">
-            <Button 
-              onClick={handleClose} 
-              className="w-full h-[48px] rounded-[20px] bg-[#001B42] text-white hover:bg-[#002B52] transition-colors"
-            >
-              {addedItems.length > 0 ? 'Concluir' : 'Voltar'}
-            </Button>
-          </div>
-          {addedItems.length > 0 && (
+        {addedItems.length > 0 && (
+          <div className="flex-shrink-0 p-6">
+            <div className="flex gap-3">
+              <Button 
+                onClick={handleClose} 
+                className="w-full h-[48px] rounded-[20px] bg-[#001B42] text-white hover:bg-[#002B52] transition-colors"
+              >
+                Continuar ({addedItems.length} no orçamento)
+              </Button>
+            </div>
             <p className="text-center text-[12px] text-[#6B7280] mt-2">
-              {addedItems.length} {addedItems.length === 1 ? 'item adicionado' : 'itens adicionados'}
+              {addedItems.length} {addedItems.length === 1 ? 'item adicionado ao orçamento' : 'itens adicionados ao orçamento'}
             </p>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   )

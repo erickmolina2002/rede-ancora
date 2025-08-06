@@ -1,13 +1,18 @@
 'use client'
 
 import React, { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import InputScreen from '../ui/InputScreen'
 import { useStepFlow } from '../hooks/useStepFlow'
+import { useCart } from '../contexts/CartContext'
 import { budgetSteps } from '../config/budgetSteps'
 
 export default function BudgetPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const initialStep = parseInt(searchParams.get('step') || '0')
+  
+  const { items: cartItems, getTotalItems } = useCart()
   
   const {
     currentStep,
@@ -20,8 +25,14 @@ export default function BudgetPage() {
     stepData
   } = useStepFlow({
     steps: budgetSteps,
+    initialStepIndex: initialStep,
+    initialData: {
+      selectedProducts: cartItems,
+      totalProducts: getTotalItems()
+    },
     onComplete: (data) => {
       console.log('Orçamento completo:', data)
+      console.log('Produtos incluídos:', cartItems)
     }
   })
 
@@ -48,6 +59,18 @@ export default function BudgetPage() {
     console.log('Orçamento finalizado e enviado:', stepData)
     router.push('/')
   }
+
+  // Automatically populate budgetServices step with cart items
+  useEffect(() => {
+    if (currentStep?.id === 'budgetServices' && cartItems.length > 0) {
+      // Se estiver no step budgetServices e tiver produtos no carrinho, adicionar automaticamente
+      const productsValue = cartItems.map(item => item.nomeProduto).join(', ')
+      if (!currentValue || currentValue !== productsValue) {
+        updateCurrentStepData(productsValue)
+        console.log('Produtos adicionados automaticamente ao step budgetServices:', cartItems)
+      }
+    }
+  }, [currentStep?.id, cartItems, currentValue, updateCurrentStepData])
 
   // Initialize step 3 with license plate from step 2
   useEffect(() => {

@@ -61,9 +61,6 @@ export default function SearchPage() {
     setShowDetailModal(true)
   }
 
-  const handleItemAdd = (item: any) => {
-    addItem(item)
-  }
 
   const formatPlaca = (value: string) => {
     // Remove todos os caracteres não alfanuméricos
@@ -334,7 +331,6 @@ export default function SearchPage() {
           setSelectedProduct('')
           setCurrentPage(0)
         }}
-        onItemAdd={handleItemAdd}
         produtos={produtosEncontrados}
         selectedProductName={selectedProduct}
         isLoading={isLoading}

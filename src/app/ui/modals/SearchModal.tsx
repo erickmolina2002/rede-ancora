@@ -7,22 +7,25 @@ import { useCart } from '../../contexts/CartContext'
 import { useProductsBudget } from '../../contexts/ProductsBudgetContext'
 import { useProductSearch } from '../../hooks/useProductSearch'
 import ProductsFoundModal from './ProductsFoundModal'
+import { Item } from '../cards/ItemCard'
+import { ProductItem } from '../cards/ProductCard'
 
 type SearchModalProps = {
   isOpen: boolean
   onClose: () => void
-  onProductSelect: (nomeProduto: string) => void
+  onProductSelect?: (nomeProduto: string) => void
+  onItemAdd?: (item: Item | ProductItem) => void
   placa?: string
 }
 
 export default function SearchModal({
   isOpen,
   onClose,
-  onProductSelect,
+  // onProductSelect,
   placa
 }: SearchModalProps) {
   const [isAnimating, setIsAnimating] = useState(false)
-  const [selectedProduct, setSelectedProduct] = useState<string>('')
+  // const [selectedProduct, setSelectedProduct] = useState<string>('')
   const [showProductsModal, setShowProductsModal] = useState(false)
   const [selectedProductName, setSelectedProductName] = useState<string>('')
   const [searchFilter, setSearchFilter] = useState<string>('')
@@ -58,7 +61,7 @@ export default function SearchModal({
   const handleProductSelect = async (nomeProduto: string) => {
     if (!placa) return
     
-    setSelectedProduct(nomeProduto)
+    // setSelectedProduct(nomeProduto)
     setSelectedProductName(nomeProduto)
     
     // Buscar produtos específicos para este nome
@@ -73,7 +76,7 @@ export default function SearchModal({
       // Se tem produtos no contexto de orçamento, vai para o step budgetServices
       setIsAnimating(true)
       setTimeout(() => {
-        setSelectedProduct('')
+        // setSelectedProduct('')
         setSelectedProductName('')
         setShowProductsModal(false)
         setSearchFilter('')
@@ -87,7 +90,7 @@ export default function SearchModal({
       // Se não tem produtos, apenas fecha o modal
       setIsAnimating(true)
       setTimeout(() => {
-        setSelectedProduct('')
+        // setSelectedProduct('')
         setSelectedProductName('')
         setShowProductsModal(false)
         setSearchFilter('')
@@ -108,7 +111,7 @@ export default function SearchModal({
   // Reset search when modal opens
   useEffect(() => {
     if (isOpen) {
-      setSelectedProduct('')
+      // setSelectedProduct('')
       setSelectedProductName('')
       setShowProductsModal(false)
       setSearchFilter('')

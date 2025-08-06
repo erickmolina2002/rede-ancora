@@ -40,7 +40,7 @@ type InputScreenProps = {
   inputComponent?: InputComponentType
   options?: string[]
   autoFocus?: boolean
-  stepData?: { [key: string]: string | number | boolean }
+  stepData?: { [key: string]: string | number | boolean | unknown }
   isLicensePlate?: boolean
 }
 

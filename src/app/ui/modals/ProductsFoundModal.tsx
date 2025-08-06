@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+// import { useRouter } from 'next/navigation'
 import ProductCard, { ProductItem } from '../cards/ProductCard'
 import Button from '../Button'
 import { useCart } from '../../contexts/CartContext'
@@ -35,7 +35,7 @@ export default function ProductsFoundModal({
   isLoading,
   error,
   placa,
-  veiculoInfo
+  // veiculoInfo
 }: ProductsFoundModalProps) {
   const [addedItems, setAddedItems] = useState<string[]>([])
   const [isAnimating, setIsAnimating] = useState(false)
@@ -44,7 +44,7 @@ export default function ProductsFoundModal({
   
   const { addItem } = useCart()
   const { addProduct } = useProductsBudget()
-  const router = useRouter()
+  // const router = useRouter()
 
   // Produtos principais (6 por página)
   const produtosPaginados = useMemo(() => {
@@ -301,7 +301,7 @@ export default function ProductsFoundModal({
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <p className="text-[#6B7280] text-[16px]">
-                  Nenhum produto encontrado para "{selectedProductName}"
+                  Nenhum produto encontrado para &quot;{selectedProductName}&quot;
                 </p>
               </div>
             </div>

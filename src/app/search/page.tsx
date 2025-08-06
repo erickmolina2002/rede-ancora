@@ -1,9 +1,9 @@
 'use client'
 
 import React, { useState, useCallback } from 'react'
-import Image from 'next/image'
+// import Image from 'next/image'
 import { useProductSearch } from '../hooks/useProductSearch'
-import { useCart } from '../contexts/CartContext'
+// import { useCart } from '../contexts/CartContext'
 import BackButton from '../ui/BackButton'
 import CartHeader from '../ui/headers/CartHeader'
 import SearchModal from '../ui/modals/SearchModal'
@@ -11,16 +11,26 @@ import ProductsFoundModal from '../ui/modals/ProductsFoundModal'
 
 export default function SearchPage() {
   const [placa, setPlaca] = useState('')
-  const [searchTerm, setSearchTerm] = useState('')
+  // const [searchTerm, setSearchTerm] = useState('')
   const [selectedProduct, setSelectedProduct] = useState('')
-  const [showResults, setShowResults] = useState(false)
-  const [currentPage, setCurrentPage] = useState(0)
+  // const [showResults, setShowResults] = useState(false)
+  // const [currentPage, setCurrentPage] = useState(0)
   const [showSearchModal, setShowSearchModal] = useState(false)
   const [showProductsModal, setShowProductsModal] = useState(false)
-  const [showDetailModal, setShowDetailModal] = useState(false)
-  const [selectedItems, setSelectedItems] = useState<any[]>([])
+  // const [showDetailModal, setShowDetailModal] = useState(false)
+  // const [selectedItems, setSelectedItems] = useState<Array<{
+  //   id: number;
+  //   nomeProduto: string;
+  //   marca: string;
+  //   codigoReferencia: string;
+  //   similares?: Array<{
+  //     nome: string;
+  //     marca: string;
+  //     preco: number;
+  //   }>;
+  // }>>([])
 
-  const { addItem } = useCart()
+  // const { addItem } = useCart()
 
   const {
     isLoading,
@@ -28,17 +38,17 @@ export default function SearchPage() {
     produtosEncontrados,
     nomesProdutos,
     veiculoInfo,
-    buscarProdutosFilho,
+    // buscarProdutosFilho,
     buscarProdutos,
-    resetSearch
+    // resetSearch
   } = useProductSearch()
 
-  const produtosPaginados = React.useMemo(() => {
-    const startIndex = currentPage * 6
-    return produtosEncontrados.slice(startIndex, startIndex + 6)
-  }, [produtosEncontrados, currentPage])
+  // const produtosPaginados = React.useMemo(() => {
+  //   const startIndex = currentPage * 6
+  //   return produtosEncontrados.slice(startIndex, startIndex + 6)
+  // }, [produtosEncontrados, currentPage])
 
-  const totalPages = Math.ceil(produtosEncontrados.length / 6)
+  // const totalPages = Math.ceil(produtosEncontrados.length / 6)
 
   const handlePlacaSubmit = useCallback(async () => {
     if (!placa.trim()) return
@@ -47,19 +57,29 @@ export default function SearchPage() {
 
   const handleProductSelect = useCallback(async (nomeProduto: string) => {
     setSelectedProduct(nomeProduto)
-    setSearchTerm(nomeProduto)
+    // setSearchTerm(nomeProduto)
     
     if (!placa || !placa.trim() || !nomeProduto.trim()) return
     
     await buscarProdutos(placa.trim().toUpperCase(), nomeProduto, 0, 20)
-    setCurrentPage(0)
+    // setCurrentPage(0)
     setShowProductsModal(true)
   }, [placa, buscarProdutos])
 
-  const handleCardClick = (produto: any) => {
-    setSelectedItems([produto])
-    setShowDetailModal(true)
-  }
+  // const handleCardClick = (produto: {
+  //   id: number;
+  //   nomeProduto: string;
+  //   marca: string;
+  //   codigoReferencia: string;
+  //   similares?: Array<{
+  //     nome: string;
+  //     marca: string;
+  //     preco: number;
+  //   }>;
+  // }) => {
+  //   setSelectedItems([produto])
+  //   setShowDetailModal(true)
+  // }
 
 
   const formatPlaca = (value: string) => {
@@ -134,7 +154,7 @@ export default function SearchPage() {
       {/* Results Area */}
       <div className="flex-1 overflow-hidden">
         {/* Lista de Produtos Disponíveis - Ocupa a tela toda */}
-        {showResults && nomesProdutos.length > 0 && (
+        {nomesProdutos.length > 0 && (
           <div className="h-full p-6">
             <div className="mb-4">
               <h3 className="text-[18px] font-semibold text-[#242424] mb-2">
@@ -194,7 +214,7 @@ export default function SearchPage() {
         )}
 
         {/* Estados vazios */}
-        {!showResults && !isLoading && (
+        {nomesProdutos.length === 0 && !isLoading && (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <div className="text-[48px] mb-4">🔍</div>
@@ -208,7 +228,7 @@ export default function SearchPage() {
           </div>
         )}
 
-        {showResults && !isLoading && !error && nomesProdutos.length === 0 && (
+        {!isLoading && !error && nomesProdutos.length === 0 && placa && (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <div className="text-[48px] mb-4">😔</div>
@@ -220,100 +240,6 @@ export default function SearchPage() {
         )}
       </div>
 
-      {/* Modal */}
-      {showModal && selectedItems.length > 0 && (
-        <div className="fixed inset-0 bg-[#1E212472] z-50 flex items-center justify-center">
-          <div className="bg-white m-6 rounded-[20px] max-w-[320px] w-full max-h-[80vh] overflow-hidden">
-            {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-[#E5E7EB]">
-              <div className="flex items-center justify-between">
-                <h2 className="text-[18px] font-semibold text-[#242424]">
-                  Detalhes do Produto
-                </h2>
-                <button
-                  onClick={handleModalClose}
-                  className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:text-[#242424] transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            {/* Modal Content */}
-            <div className="p-6 overflow-y-auto max-h-[60vh]">
-              {selectedItems.map((produto) => (
-                <div key={produto.id} className="space-y-4">
-                  {/* Imagem */}
-                  {produto.imagemReal && (
-                    <div className="w-full h-48 relative bg-gray-100 rounded-[12px] overflow-hidden">
-                      <Image
-                        src={produto.imagemReal}
-                        alt={produto.nomeProduto}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  )}
-
-                  {/* Informações */}
-                  <div>
-                    <h3 className="text-[16px] font-semibold text-[#242424] mb-2">
-                      {produto.nomeProduto}
-                    </h3>
-                    <div className="space-y-2 text-[14px]">
-                      <div>
-                        <span className="font-medium text-[#6B7280]">Marca: </span>
-                        <span className="text-[#242424]">{produto.marca}</span>
-                      </div>
-                      <div>
-                        <span className="font-medium text-[#6B7280]">Código: </span>
-                        <span className="text-[#242424]">{produto.codigoReferencia}</span>
-                      </div>
-                      {produto.informacoesComplementares && (
-                        <div>
-                          <span className="font-medium text-[#6B7280]">Informações: </span>
-                          <span className="text-[#242424]">{produto.informacoesComplementares}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Similares */}
-                  {produto.similares && produto.similares.length > 0 && (
-                    <div>
-                      <h4 className="text-[14px] font-medium text-[#6B7280] mb-2">
-                        Produtos Similares ({produto.similares.length})
-                      </h4>
-                      <div className="space-y-2">
-                        {produto.similares.slice(0, 3).map((similar: any, index: number) => (
-                          <div key={index} className="p-3 bg-[#F9FAFB] rounded-[8px]">
-                            <p className="text-[13px] font-medium text-[#242424]">
-                              {similar.marca}
-                            </p>
-                            <p className="text-[12px] text-[#6B7280]">
-                              {similar.codigoReferencia}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Modal Footer */}
-            <div className="px-6 py-4 border-t border-[#E5E7EB]">
-              <button
-                onClick={handleModalClose}
-                className="w-full py-3 bg-[#059669] text-white rounded-[12px] font-medium hover:bg-[#047857] transition-colors"
-              >
-                Fechar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Search Modal */}
       <SearchModal
@@ -329,7 +255,7 @@ export default function SearchPage() {
         onClose={() => {
           setShowProductsModal(false)
           setSelectedProduct('')
-          setCurrentPage(0)
+          // setCurrentPage(0)
         }}
         produtos={produtosEncontrados}
         selectedProductName={selectedProduct}

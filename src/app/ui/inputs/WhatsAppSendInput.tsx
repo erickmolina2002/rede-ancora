@@ -11,7 +11,7 @@ type WhatsAppSendInputProps = {
   className?: string
   autoFocus?: boolean
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
-  stepData?: { [key: string]: string | number | boolean }
+  stepData?: { [key: string]: string | number | boolean | unknown }
   onSkip?: () => void
   onFinish?: () => void
 }
@@ -85,7 +85,13 @@ export default function WhatsAppSendInput({
       }>) || []
       
       // If no products in stepData, create from budget services text
-      let realProducts = []
+      let realProducts: Array<{
+        id: number;
+        name: string;
+        price: number;
+        quantity: number;
+        type: string;
+      }> = []
       if (selectedProducts.length > 0) {
         realProducts = selectedProducts.map((product, index) => ({
           id: product.id || index + 1,

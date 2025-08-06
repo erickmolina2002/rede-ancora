@@ -13,7 +13,7 @@ type BudgetConfirmationInputProps = {
   autoFocus?: boolean
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
   // Additional props to access previous step data
-  stepData?: { [key: string]: string | number | boolean }
+  stepData?: { [key: string]: string | number | boolean | unknown }
 }
 
 export default function BudgetConfirmationInput({
@@ -27,18 +27,18 @@ export default function BudgetConfirmationInput({
   const { products, getTotalAmount } = useProductsBudget()
 
   // Convert products to selected services format
-  const getSelectedServices = () => {
-    return products.map(product => ({
-      id: product.id.toString(),
-      name: product.name,
-      price: product.totalPrice,
-      unitPrice: product.unitPrice,
-      quantity: product.quantity,
-      type: 'parts' as const,
-      brand: product.brand,
-      code: product.code
-    }))
-  }
+  // const getSelectedServices = () => {
+  //   return products.map(product => ({
+  //     id: product.id.toString(),
+  //     name: product.name,
+  //     price: product.totalPrice,
+  //     unitPrice: product.unitPrice,
+  //     quantity: product.quantity,
+  //     type: 'parts' as const,
+  //     brand: product.brand,
+  //     code: product.code
+  //   }))
+  // }
 
   const getServicePrice = () => {
     const serviceValue = stepData.budgetValue as string || '0'
@@ -54,7 +54,7 @@ export default function BudgetConfirmationInput({
     return getServicePrice()
   }
 
-  const selectedServices = getSelectedServices()
+  // const selectedServices = getSelectedServices()
   const originalServicePrice = getServicePrice()
   const currentServicePrice = getCurrentServicePrice()
   
@@ -128,7 +128,7 @@ export default function BudgetConfirmationInput({
           <div className="flex justify-between items-center">
             <span className="text-[14px] text-[#6B7280]">Veículo</span>
             <span className="text-[16px] font-medium text-[#242424]">
-              {stepData.budgetDescription || stepData.budgetPlateConfirmation || 'N/A'}
+              {String(stepData.budgetDescription || stepData.budgetPlateConfirmation || 'N/A')}
             </span>
           </div>
         </div>

@@ -1,13 +1,13 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import InputScreen from '../ui/InputScreen'
 import { useStepFlow } from '../hooks/useStepFlow'
 import { useProductsBudget } from '../contexts/ProductsBudgetContext'
 import { budgetSteps } from '../config/budgetSteps'
 
-export default function BudgetPage() {
+function BudgetPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialStep = parseInt(searchParams.get('step') || '0')
@@ -126,5 +126,13 @@ export default function BudgetPage() {
       }}
       isLicensePlate={currentStep.id === 'budgetPlateConfirmation'}
     />
+  )
+}
+
+export default function BudgetPage() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <BudgetPageContent />
+    </Suspense>
   )
 }

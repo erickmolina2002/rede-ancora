@@ -1,5 +1,13 @@
 export type StepData = {
-  [key: string]: string | number | boolean
+  [key: string]: string | number | boolean | Array<{
+    id: number;
+    name?: string;
+    nomeProduto?: string;
+    totalPrice?: number;
+    unitPrice?: number;
+    quantity?: number;
+    [key: string]: unknown;
+  }> | unknown
 }
 
 export type InputComponentType = | 'input'

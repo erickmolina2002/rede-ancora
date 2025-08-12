@@ -43,23 +43,43 @@ export default function WhatsAppSendInput({
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let inputValue = e.target.value
+    const inputValue = e.target.value
+    const currentDigits = value.replace(/\D/g, '')
+    const newDigits = inputValue.replace(/\D/g, '')
     
-    // Format phone number as user types
-    inputValue = inputValue.replace(/\D/g, '') // Remove non-digits
+    // Handle deletion more elegantly
+    if (newDigits.length < currentDigits.length || inputValue === '') {
+      const formatted = formatPhoneNumber(newDigits)
+      onChange(formatted)
+      return
+    }
     
-    if (inputValue.length <= 11) {
-      // Format: (11) 99999-9999
-      if (inputValue.length > 6) {
-        inputValue = inputValue.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3')
-      } else if (inputValue.length > 2) {
-        inputValue = inputValue.replace(/(\d{2})(\d{0,5})/, '($1) $2')
-      } else if (inputValue.length > 0) {
-        inputValue = inputValue.replace(/(\d{0,2})/, '($1')
+    // Handle addition of new digits
+    if (newDigits.length <= 11) {
+      const formatted = formatPhoneNumber(newDigits)
+      onChange(formatted)
+    }
+  }
+  
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Allow backspace and delete to work more naturally
+    if (e.key === 'Backspace' || e.key === 'Delete') {
+      const currentDigits = value.replace(/\D/g, '')
+      if (currentDigits.length === 0) {
+        onChange('')
+        return
       }
     }
     
-    onChange(inputValue)
+    // Call the original onKeyDown if provided
+    onKeyDown?.(e)
+  }
+  
+  const formatPhoneNumber = (digits: string) => {
+    if (digits.length === 0) return ''
+    if (digits.length <= 2) return `(${digits}`
+    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`
   }
 
   const handleSendWhatsApp = async () => {
@@ -268,7 +288,7 @@ export default function WhatsAppSendInput({
             type="tel"
             value={value}
             onChange={handleChange}
-            onKeyDown={onKeyDown}
+            onKeyDown={handleKeyDown}
             onFocus={handleFocus}
             onBlur={handleBlur}
             placeholder={placeholder}

@@ -8,6 +8,7 @@ export type ProductWithPricing = {
   name: string
   brand: string
   code: string
+  imageUrl: string | null
   unitPrice: number
   quantity: number
   totalPrice: number
@@ -53,6 +54,7 @@ export function ProductsBudgetProvider({ children }: { children: ReactNode }) {
         name: product.nomeProduto,
         brand: product.marca,
         code: product.codigoReferencia,
+        imageUrl: product.imagemReal,
         unitPrice,
         quantity: 1,
         totalPrice: unitPrice,

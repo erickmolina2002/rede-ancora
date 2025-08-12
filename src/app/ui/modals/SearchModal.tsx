@@ -3,8 +3,10 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Button from '../Button'
+import LoadingSpinner from '../components/LoadingSpinner'
 import { useCart } from '../../contexts/CartContext'
 import { useProductsBudget } from '../../contexts/ProductsBudgetContext'
+import { useVehicle } from '../../contexts/VehicleContext'
 import { useProductSearch } from '../../hooks/useProductSearch'
 import ProductsFoundModal from './ProductsFoundModal'
 import { Item } from '../cards/ItemCard'
@@ -32,6 +34,7 @@ export default function SearchModal({
 
   const { getTotalItems } = useCart()
   const { hasProducts } = useProductsBudget()
+  const { setVehicleInfo } = useVehicle()
   const router = useRouter()
 
   const {
@@ -56,6 +59,28 @@ export default function SearchModal({
       buscarProdutosFilho(placa.trim().toUpperCase())
     }
   }, [isOpen, placa, buscarProdutosFilho])
+
+  // Update VehicleContext when vehicle info is fetched
+  useEffect(() => {
+    if (veiculoInfo && placa) {
+      setVehicleInfo({
+        placa: placa.trim().toUpperCase(),
+        montadora: veiculoInfo.montadora,
+        modelo: veiculoInfo.modelo,
+        versao: veiculoInfo.versao,
+        chassi: veiculoInfo.chassi,
+        motor: veiculoInfo.motor,
+        combustivel: veiculoInfo.combustivel,
+        cambio: veiculoInfo.cambio,
+        carroceria: veiculoInfo.carroceria,
+        anoFabricacao: veiculoInfo.anoFabricacao,
+        anoModelo: veiculoInfo.anoModelo,
+        linha: veiculoInfo.linha,
+        eixos: veiculoInfo.eixos,
+        geracao: veiculoInfo.geracao
+      })
+    }
+  }, [veiculoInfo, placa, setVehicleInfo])
 
   // Selecionar produto e buscar produtos específicos
   const handleProductSelect = async (nomeProduto: string) => {
@@ -125,7 +150,7 @@ export default function SearchModal({
   return (
     <div className={`fixed inset-0 bg-[#F5F5F5] z-50 transition-opacity duration-200 ${isAnimating ? 'animate-out fade-out' : 'animate-in fade-in'
       }`}>
-      <div className={`flex flex-col h-full w-full max-w-[360px] mx-auto transition-transform duration-300 ${isAnimating
+      <div className={`flex flex-col h-full w-full max-w-[360px] mx-auto transition-transform duration-300 overflow-hidden ${isAnimating
           ? 'animate-out slide-out-to-bottom'
           : 'animate-in slide-in-from-bottom'
         }`}>
@@ -156,15 +181,10 @@ export default function SearchModal({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden">
           {/* Loading */}
           {isLoading && (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#059669] mb-4"></div>
-                <p className="text-[#6B7280] text-[14px]">Carregando produtos...</p>
-              </div>
-            </div>
+            <LoadingSpinner message="Carregando produtos..." />
           )}
 
           {/* Error */}
@@ -179,26 +199,24 @@ export default function SearchModal({
 
           {/* Lista de Produtos Disponíveis */}
           {!isLoading && !error && nomesProdutos.length > 0 && (
-            <div className="h-full">
-
-
+            <div className="h-full px-4">
               <div className="space-y-3">
                 {nomesProdutos.map((nomeProduto, index) => (
                   <div
                     key={index}
                     onClick={() => handleProductSelect(nomeProduto)}
-                    className="bg-white border border-[#E5E7EB] rounded-[12px] p-4 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98]"
+                    className="bg-white border border-[#E5E7EB] rounded-[12px] p-4 cursor-pointer transition-all duration-200 hover:shadow-md active:scale-[0.98] w-full"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h4 className="text-[16px] font-medium text-[#242424] mb-1">
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex-1 min-w-0 pr-3">
+                        <h4 className="text-[16px] font-medium text-[#242424] mb-1 truncate">
                           {nomeProduto}
                         </h4>
-                        <p className="text-[14px] text-[#6B7280]">
+                        <p className="text-[14px] text-[#6B7280] truncate">
                           Toque para ver produtos disponíveis
                         </p>
                       </div>
-                      <div className="text-[#059669]">
+                      <div className="text-[#059669] flex-shrink-0">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="m9 18 6-6-6-6" />
                         </svg>
@@ -221,15 +239,6 @@ export default function SearchModal({
             </div>
           )}
 
-          {!isLoading && !error && nomesProdutos.length === 0 && placa && (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <p className="text-[#6B7280] text-[16px]">
-                  Nenhum produto encontrado para esta placa
-                </p>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Footer */}

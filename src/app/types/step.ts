@@ -17,6 +17,7 @@ export type InputComponentType = | 'input'
   | 'camera'
   | 'itemsearch'
   | 'budgetconfirmation'
+  | 'plateconfirmation'
   | 'whatsappsend'
 
 export type StepConfig = {

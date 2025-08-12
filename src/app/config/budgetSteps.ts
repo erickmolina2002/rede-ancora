@@ -27,9 +27,9 @@ export const budgetSteps: StepConfig[] = [
   {
     id: 'budgetPlateConfirmation',
     title: 'Confirme a placa do veículo',
-    subtitle: 'Verifique se a placa está correta',
+    subtitle: 'Verifique se a placa está correta e as informações do veículo',
     placeholder: 'ABC-1234',
-    inputComponent: 'input' as const,
+    inputComponent: 'plateconfirmation' as const,
     required: true,
     allowBack: true,
     continueButtonText: 'Confirmar',

@@ -9,6 +9,7 @@ import DateInput from './inputs/DateInput'
 import CameraInput from './inputs/CameraInput'
 import ItemSearchInput from './inputs/ItemSearchInput'
 import BudgetConfirmationInput from './inputs/BudgetConfirmationInput'
+import PlateConfirmationInput from './inputs/PlateConfirmationInput'
 import WhatsAppSendInput from './inputs/WhatsAppSendInput'
 import Button from './Button'
 import { InputComponentType } from '../types/step'
@@ -110,6 +111,9 @@ export default function InputScreen({
       
       case 'budgetconfirmation':
         return <BudgetConfirmationInput {...commonProps} stepData={stepData} />
+      
+      case 'plateconfirmation':
+        return <PlateConfirmationInput {...commonProps} stepData={stepData} />
       
       case 'whatsappsend':
         return <WhatsAppSendInput {...commonProps} stepData={stepData} onSkip={onSkip} onFinish={onFinish} />

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useVehicle } from '../../contexts/VehicleContext'
 
 type WhatsAppSendInputProps = {
   value: string
@@ -31,6 +32,7 @@ export default function WhatsAppSendInput({
 }: WhatsAppSendInputProps) {
   const [isFocused, setIsFocused] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const { vehicleInfo } = useVehicle()
 
   const handleFocus = () => {
     setIsFocused(true)
@@ -145,7 +147,18 @@ export default function WhatsAppSendInput({
       let message = `${greeting}!\n\n`
       message += `Esperamos que esteja tudo bem! Segue abaixo o orçamento solicitado para seu veículo:\n\n`
       message += `*ORÇAMENTO - ${budgetName.toUpperCase()}*\n`
-      message += `*Veículo:* ${vehiclePlate}\n\n`
+      
+      // Vehicle information with essential details
+      if (vehicleInfo) {
+        message += `*INFORMAÇÕES DO VEÍCULO:*\n`
+        message += `🚗 *Placa:* ${vehicleInfo.placa}\n`
+        message += `🚗 *Marca/Modelo:* ${vehicleInfo.montadora} ${vehicleInfo.modelo}\n`
+        message += `📅 *Ano Fabricação:* ${vehicleInfo.anoFabricacao}\n`
+        message += `⚙️ *Câmbio:* ${vehicleInfo.cambio}\n`
+        message += `🚙 *Carroceria:* ${vehicleInfo.carroceria}\n\n`
+      } else {
+        message += `*Veículo:* ${vehiclePlate}\n\n`
+      }
       
       // Show parts with quantities and individual prices
       if (partsItems.length > 0) {

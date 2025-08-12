@@ -3,6 +3,7 @@ import { Manrope, Geist } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "./contexts/CartContext";
 import { ProductsBudgetProvider } from "./contexts/ProductsBudgetContext";
+import { VehicleProvider } from "./contexts/VehicleContext";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -70,7 +71,9 @@ export default function RootLayout({
       >
         <CartProvider>
           <ProductsBudgetProvider>
-            {children}
+            <VehicleProvider>
+              {children}
+            </VehicleProvider>
           </ProductsBudgetProvider>
         </CartProvider>
       </body>

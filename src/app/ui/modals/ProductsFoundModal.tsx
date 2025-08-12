@@ -4,8 +4,10 @@ import React, { useState, useMemo } from 'react'
 // import { useRouter } from 'next/navigation'
 import ProductCard, { ProductItem } from '../cards/ProductCard'
 import Button from '../Button'
+import LoadingSpinner from '../components/LoadingSpinner'
 import { useCart } from '../../contexts/CartContext'
 import { useProductsBudget } from '../../contexts/ProductsBudgetContext'
+import { useVehicle } from '../../contexts/VehicleContext'
 import { Produto } from '../../services/apiService'
 
 type ProductsFoundModalProps = {
@@ -35,7 +37,7 @@ export default function ProductsFoundModal({
   isLoading,
   error,
   placa,
-  // veiculoInfo
+  veiculoInfo
 }: ProductsFoundModalProps) {
   const [addedItems, setAddedItems] = useState<string[]>([])
   const [isAnimating, setIsAnimating] = useState(false)
@@ -44,6 +46,7 @@ export default function ProductsFoundModal({
   
   const { addItem } = useCart()
   const { addProduct } = useProductsBudget()
+  const { setVehicleInfo } = useVehicle()
   // const router = useRouter()
 
   // Produtos principais (6 por página)
@@ -84,13 +87,17 @@ export default function ProductsFoundModal({
 
   const totalPages = Math.ceil(produtos.length / 6)
 
-  const handleItemAdd = (item: ProductItem) => {
+  const handleItemToggle = (item: ProductItem) => {
     const itemId = item.id.toString()
     if (!addedItems.includes(itemId)) {
       // Add to both contexts for compatibility
       addItem(item)
       addProduct(item)
       setAddedItems(prev => [...prev, itemId])
+    } else {
+      // Remove from contexts
+      // Note: Assuming removeItem and removeProduct methods exist in contexts
+      setAddedItems(prev => prev.filter(id => id !== itemId))
     }
   }
 
@@ -104,6 +111,28 @@ export default function ProductsFoundModal({
       onClose()
     }, 200)
   }
+
+  // Update VehicleContext when vehicle info is available
+  React.useEffect(() => {
+    if (isOpen && veiculoInfo && placa) {
+      setVehicleInfo({
+        placa: placa.trim().toUpperCase(),
+        montadora: veiculoInfo.montadora,
+        modelo: veiculoInfo.modelo,
+        versao: veiculoInfo.versao,
+        chassi: veiculoInfo.chassi || '',
+        motor: veiculoInfo.motor,
+        combustivel: veiculoInfo.combustivel,
+        cambio: veiculoInfo.cambio,
+        carroceria: veiculoInfo.carroceria,
+        anoFabricacao: veiculoInfo.anoFabricacao,
+        anoModelo: veiculoInfo.anoModelo,
+        linha: veiculoInfo.linha,
+        eixos: veiculoInfo.eixos,
+        geracao: veiculoInfo.geracao || ''
+      })
+    }
+  }, [isOpen, veiculoInfo, placa, setVehicleInfo])
 
   // Reset when modal opens
   React.useEffect(() => {
@@ -121,7 +150,7 @@ export default function ProductsFoundModal({
     <div className={`fixed inset-0 bg-[#F5F5F5] z-50 transition-opacity duration-200 ${
       isAnimating ? 'animate-out fade-out' : 'animate-in fade-in'
     }`}>
-      <div className={`flex flex-col h-full w-full max-w-[360px] mx-auto transition-transform duration-300 ${
+      <div className={`flex flex-col h-full w-full max-w-[360px] mx-auto transition-transform duration-300 overflow-hidden ${
         isAnimating 
           ? 'animate-out slide-out-to-bottom' 
           : 'animate-in slide-in-from-bottom'
@@ -155,15 +184,10 @@ export default function ProductsFoundModal({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden">
           {/* Loading */}
           {isLoading && (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#059669] mb-4"></div>
-                <p className="text-[#6B7280] text-[14px]">Carregando produtos...</p>
-              </div>
-            </div>
+            <LoadingSpinner message="Carregando produtos..." />
           )}
 
           {/* Error */}
@@ -208,13 +232,10 @@ export default function ProductsFoundModal({
                     >
                       <ProductCard 
                         produto={produto} 
-                        onAdd={handleItemAdd}
+                        onAdd={handleItemToggle}
+                        isAdded={isAdded}
                       />
-                      {isAdded && (
-                        <div className="absolute top-2 right-12 bg-green-500 text-white text-xs px-2 py-1 rounded-full animate-in zoom-in duration-300">
-                          ✓ No orçamento
-                        </div>
-                      )}
+                      
                     </div>
                   )
                 })}
@@ -256,14 +277,11 @@ export default function ProductsFoundModal({
                               imagemIlustrativa: null,
                               similares: []
                             }}
-                            onAdd={handleItemAdd}
+                            onAdd={handleItemToggle}
                             isSimilar={true}
+                            isAdded={isAdded}
                           />
-                          {isAdded && (
-                            <div className="absolute top-2 right-12 bg-green-500 text-white text-xs px-2 py-1 rounded-full animate-in zoom-in duration-300">
-                              ✓ No orçamento
-                            </div>
-                          )}
+                          
                         </div>
                       )
                     })}
@@ -296,16 +314,6 @@ export default function ProductsFoundModal({
             </div>
           )}
 
-          {/* Empty State */}
-          {!isLoading && !error && produtos.length === 0 && (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <p className="text-[#6B7280] text-[16px]">
-                  Nenhum produto encontrado para &quot;{selectedProductName}&quot;
-                </p>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Footer */}

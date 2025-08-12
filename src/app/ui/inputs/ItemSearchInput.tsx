@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import SearchModal from '../modals/SearchModal'
 import SelectedItemsList from '../lists/SelectedItemsList'
+import EnhancedProductsList from '../lists/EnhancedProductsList'
 import { useCart } from '../../contexts/CartContext'
 import { Item } from '../cards/ItemCard'
 import { ProductItem } from '../cards/ProductCard'
@@ -33,7 +34,7 @@ export default function ItemSearchInput({
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedItems, setSelectedItems] = useState<Item[]>([])
   const [isClicked, setIsClicked] = useState(false)
-  // const [productsTotal, setProductsTotal] = useState(0)
+  const [productsTotal, setProductsTotal] = useState(0)
   
   const { items: cartItems } = useCart()
   
@@ -202,12 +203,11 @@ export default function ItemSearchInput({
       )}
 
       {/* Enhanced Products List - Shows cart items with quantity and pricing */}
-      {/* {cartItems.length > 0 && (
+      {cartItems.length > 0 && (
         <EnhancedProductsList 
-          cartItems={cartItems}
           onTotalChange={setProductsTotal}
         />
-      )} */}
+      )}
 
       {/* Selected Items List - Shows manually added items only */}
       {selectedItems.length > 0 && (

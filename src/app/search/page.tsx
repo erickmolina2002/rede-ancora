@@ -1,11 +1,13 @@
 'use client'
 
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 // import Image from 'next/image'
 import { useProductSearch } from '../hooks/useProductSearch'
 // import { useCart } from '../contexts/CartContext'
+import { useVehicle } from '../contexts/VehicleContext'
 import BackButton from '../ui/BackButton'
 import CartHeader from '../ui/headers/CartHeader'
+import LoadingSpinner from '../ui/components/LoadingSpinner'
 import SearchModal from '../ui/modals/SearchModal'
 import ProductsFoundModal from '../ui/modals/ProductsFoundModal'
 
@@ -31,6 +33,7 @@ export default function SearchPage() {
   // }>>([])
 
   // const { addItem } = useCart()
+  const { setVehicleInfo } = useVehicle()
 
   const {
     isLoading,
@@ -38,8 +41,9 @@ export default function SearchPage() {
     produtosEncontrados,
     nomesProdutos,
     veiculoInfo,
-    // buscarProdutosFilho,
+    buscarProdutosFilho,
     buscarProdutos,
+    buscarInformacoesVeiculo,
     // resetSearch
   } = useProductSearch()
 
@@ -52,8 +56,11 @@ export default function SearchPage() {
 
   const handlePlacaSubmit = useCallback(async () => {
     if (!placa.trim()) return
+    
+    // Buscar produtos filho para popular a lista de produtos disponíveis
+    await buscarProdutosFilho(placa.trim().toUpperCase())
     setShowSearchModal(true)
-  }, [placa])
+  }, [placa, buscarProdutosFilho])
 
   const handleProductSelect = useCallback(async (nomeProduto: string) => {
     setSelectedProduct(nomeProduto)
@@ -100,6 +107,43 @@ export default function SearchPage() {
     const formatted = formatPlaca(e.target.value)
     setPlaca(formatted)
   }
+
+  // Save vehicle info to context when it's loaded
+  useEffect(() => {
+    console.log('useEffect veiculoInfo:', veiculoInfo)
+    console.log('useEffect placa:', placa)
+    if (veiculoInfo && placa) {
+      console.log('Salvando informações do veículo no contexto:', veiculoInfo)
+      setVehicleInfo({
+        placa: placa,
+        montadora: veiculoInfo.montadora,
+        modelo: veiculoInfo.modelo,
+        versao: veiculoInfo.versao,
+        chassi: veiculoInfo.chassi,
+        motor: veiculoInfo.motor,
+        combustivel: veiculoInfo.combustivel,
+        cambio: veiculoInfo.cambio,
+        carroceria: veiculoInfo.carroceria,
+        anoFabricacao: veiculoInfo.anoFabricacao,
+        anoModelo: veiculoInfo.anoModelo,
+        linha: veiculoInfo.linha,
+        eixos: veiculoInfo.eixos,
+        geracao: veiculoInfo.geracao
+      })
+    }
+  }, [veiculoInfo, placa, setVehicleInfo])
+
+  // Try to get vehicle info proactively when placa is valid
+  useEffect(() => {
+    const isValidPlaca = placa.length >= 8 && placa.includes('-')
+    if (isValidPlaca && !veiculoInfo && !isLoading) {
+      const timer = setTimeout(() => {
+        buscarInformacoesVeiculo(placa.trim().toUpperCase())
+      }, 1000) // Debounce de 1 segundo
+      
+      return () => clearTimeout(timer)
+    }
+  }, [placa, veiculoInfo, isLoading, buscarInformacoesVeiculo])
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] max-w-[360px] mx-auto flex flex-col relative">
@@ -195,12 +239,7 @@ export default function SearchPage() {
 
         {/* Loading */}
         {isLoading && (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#059669] mb-4"></div>
-              <p className="text-[#6B7280] text-[14px]">Carregando produtos...</p>
-            </div>
-          </div>
+          <LoadingSpinner message="Carregando produtos disponíveis..." />
         )}
 
         {/* Error */}
@@ -228,16 +267,6 @@ export default function SearchPage() {
           </div>
         )}
 
-        {!isLoading && !error && nomesProdutos.length === 0 && placa && (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="text-[48px] mb-4">😔</div>
-              <p className="text-[#6B7280] text-[16px]">
-                Nenhum produto encontrado para esta placa
-              </p>
-            </div>
-          </div>
-        )}
       </div>
 
 

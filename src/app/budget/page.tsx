@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import InputScreen from '../ui/InputScreen'
 import { useStepFlow } from '../hooks/useStepFlow'
 import { useProductsBudget } from '../contexts/ProductsBudgetContext'
+import { useVehicle } from '../contexts/VehicleContext'
+import { useProductSearch } from '../hooks/useProductSearch'
 import { budgetSteps } from '../config/budgetSteps'
 
 function BudgetPageContent() {
@@ -13,6 +15,8 @@ function BudgetPageContent() {
   const initialStep = parseInt(searchParams.get('step') || '0')
   
   const { products, getTotalItems } = useProductsBudget()
+  const { setVehicleInfo, clearVehicleInfo } = useVehicle()
+  const { buscarInformacoesVeiculo } = useProductSearch()
   
   const {
     currentStep,
@@ -73,12 +77,53 @@ function BudgetPageContent() {
     }
   }, [currentStep?.id, products, currentValue, updateCurrentStepData])
 
+  // Auto-search vehicle info when license plate is entered
+  useEffect(() => {
+    const searchVehicleInfo = async () => {
+      if (currentStep?.id === 'budgetDescription' && currentValue && currentValue.length >= 8) {
+        try {
+          const vehicleInfo = await buscarInformacoesVeiculo(currentValue.trim().toUpperCase())
+          if (vehicleInfo) {
+            setVehicleInfo({
+              placa: currentValue.trim().toUpperCase(),
+              montadora: vehicleInfo.montadora,
+              modelo: vehicleInfo.modelo,
+              versao: vehicleInfo.versao,
+              chassi: vehicleInfo.chassi,
+              motor: vehicleInfo.motor,
+              combustivel: vehicleInfo.combustivel,
+              cambio: vehicleInfo.cambio,
+              carroceria: vehicleInfo.carroceria,
+              anoFabricacao: vehicleInfo.anoFabricacao,
+              anoModelo: vehicleInfo.anoModelo,
+              linha: vehicleInfo.linha,
+              eixos: vehicleInfo.eixos,
+              geracao: vehicleInfo.geracao
+            })
+          }
+        } catch (error) {
+          console.log('Erro ao buscar informações do veículo:', error)
+        }
+      }
+    }
+
+    const timeoutId = setTimeout(searchVehicleInfo, 1000) // Debounce de 1 segundo
+    return () => clearTimeout(timeoutId)
+  }, [currentStep?.id, currentValue, buscarInformacoesVeiculo, setVehicleInfo])
+
   // Initialize step 3 with license plate from step 2
   useEffect(() => {
     if (currentStep?.id === 'budgetPlateConfirmation' && !currentValue && stepData.budgetDescription) {
       updateCurrentStepData(stepData.budgetDescription as string)
     }
   }, [currentStep?.id, currentValue, stepData.budgetDescription, updateCurrentStepData])
+
+  // Clear vehicle info when starting a new budget
+  useEffect(() => {
+    if (currentStep?.id === 'budgetName') {
+      clearVehicleInfo()
+    }
+  }, [currentStep?.id, clearVehicleInfo])
 
   if (!currentStep) {
     return <div>Carregando...</div>

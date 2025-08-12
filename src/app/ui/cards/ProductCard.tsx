@@ -18,9 +18,10 @@ type ProductCardProps = {
   onAdd: (item: ProductItem) => void
   isSimilar?: boolean
   showAddButton?: boolean
+  isAdded?: boolean
 }
 
-export default function ProductCard({ produto, onAdd, isSimilar = false, showAddButton = true }: ProductCardProps) {
+export default function ProductCard({ produto, onAdd, isSimilar = false, showAddButton = true, isAdded = false }: ProductCardProps) {
   const [isAdding, setIsAdding] = useState(false)
   const [imageError, setImageError] = useState(false)
 
@@ -124,22 +125,38 @@ export default function ProductCard({ produto, onAdd, isSimilar = false, showAdd
           )}
         </div>
         
-        {/* Botão Adicionar */}
+        {/* Botão Adicionar/Remover */}
         {showAddButton && (
           <div
             className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 transform ${
-              isAdding ? 'animate-pulse scale-95' : 'hover:scale-110'
+              isAdded 
+                ? 'bg-green-500 hover:bg-red-500 hover:scale-110' 
+                : isAdding ? 'animate-pulse scale-95' : 'hover:scale-110'
             }`}
           >
-            <Image
-              src="/plus.svg"
-              alt="Adicionar"
-              width={16}
-              height={16}
-              className={`w-4 h-4 transition-transform duration-200 ${
-                isAdding ? 'rotate-90' : ''
-              }`}
-            />
+            {isAdded ? (
+              <svg 
+                width="16" 
+                height="16" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="white" 
+                strokeWidth="2"
+                className="w-4 h-4 transition-all duration-200"
+              >
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
+            ) : (
+              <Image
+                src="/plus.svg"
+                alt="Adicionar"
+                width={16}
+                height={16}
+                className={`w-4 h-4 transition-transform duration-200 ${
+                  isAdding ? 'rotate-90' : ''
+                }`}
+              />
+            )}
           </div>
         )}
       </div>

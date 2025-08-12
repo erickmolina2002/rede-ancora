@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { useProductsBudget } from '../../contexts/ProductsBudgetContext'
+import { useVehicle } from '../../contexts/VehicleContext'
 
 type BudgetConfirmationInputProps = {
   value: string
@@ -25,6 +26,12 @@ export default function BudgetConfirmationInput({
   const [editableServicePrice, setEditableServicePrice] = useState<string>('')
   const [isEditingService, setIsEditingService] = useState(false)
   const { products, getTotalAmount } = useProductsBudget()
+  const { vehicleInfo } = useVehicle()
+
+  // Debug: log vehicle info
+  useEffect(() => {
+    console.log('BudgetConfirmationInput - vehicleInfo:', vehicleInfo)
+  }, [vehicleInfo])
 
   // Convert products to selected services format
   // const getSelectedServices = () => {
@@ -123,13 +130,54 @@ export default function BudgetConfirmationInput({
           </p>
         </div>
 
-        {/* Vehicle Info */}
-        <div className="bg-[#F8F9FA] rounded-lg p-4">
-          <div className="flex justify-between items-center">
-            <span className="text-[14px] text-[#6B7280]">Veículo</span>
-            <span className="text-[16px] font-medium text-[#242424]">
-              {String(stepData.budgetDescription || stepData.budgetPlateConfirmation || 'N/A')}
-            </span>
+        {/* Vehicle Info - Simplified Design */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                <path d="M5 11l1.5-4.5h11L19 11M5 11v6h2v2h2v-2h6v2h2v-2h2v-6M5 11h14"/>
+                <circle cx="7" cy="14.5" r="1.5"/>
+                <circle cx="17" cy="14.5" r="1.5"/>
+                <path d="M8 6.5h8l-1-2H9l-1 2z" opacity="0.8"/>
+                <path d="M6 8h12" strokeWidth="0.5" opacity="0.6"/>
+              </svg>
+            </div>
+            <h4 className="text-[18px] font-semibold text-[#242424]">Informações do Veículo</h4>
+          </div>
+          
+          <div className="bg-white rounded-lg p-4 border border-blue-100">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-[14px] text-[#6B7280]">Placa</span>
+                <span className="text-[16px] font-bold text-[#242424] bg-gray-100 px-3 py-1 rounded font-mono">
+                  {vehicleInfo?.placa || String(stepData.budgetDescription || stepData.budgetPlateConfirmation || 'ABC-1234')}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[14px] text-[#6B7280]">Marca/Modelo</span>
+                <span className="text-[14px] font-medium text-[#242424]">
+                  {vehicleInfo ? `${vehicleInfo.montadora} ${vehicleInfo.modelo}` : 'Carregando...'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[14px] text-[#6B7280]">Ano Fabricação</span>
+                <span className="text-[14px] font-medium text-[#242424]">
+                  {vehicleInfo?.anoFabricacao || 'Carregando...'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[14px] text-[#6B7280]">Câmbio</span>
+                <span className="text-[14px] font-medium text-[#242424]">
+                  {vehicleInfo?.cambio || 'Carregando...'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[14px] text-[#6B7280]">Carroceria</span>
+                <span className="text-[14px] font-medium text-[#242424]">
+                  {vehicleInfo?.carroceria || 'Carregando...'}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 

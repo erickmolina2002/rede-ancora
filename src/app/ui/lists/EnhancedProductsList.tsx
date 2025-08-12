@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { useProductsBudget } from '../../contexts/ProductsBudgetContext'
 
 type EnhancedProductsListProps = {
@@ -11,10 +12,12 @@ export default function EnhancedProductsList({
   onTotalChange 
 }: EnhancedProductsListProps) {
   const [animatedItems, setAnimatedItems] = useState<string[]>([])
+  const [imageErrors, setImageErrors] = useState<{[key: string]: boolean}>({})
   
   const { 
     products, 
     updateQuantity: updateProductQuantity, 
+    removeProduct,
     getTotalAmount 
   } = useProductsBudget()
 
@@ -34,6 +37,30 @@ export default function EnhancedProductsList({
 
   const handleUpdateQuantity = (productId: number, newQuantity: number) => {
     updateProductQuantity(productId, newQuantity)
+  }
+
+  const handleRemoveProduct = (productId: number) => {
+    removeProduct(productId)
+  }
+
+  const getImageUrl = (imagePath: string | null) => {
+    if (!imagePath || imagePath.trim() === '') return null
+    
+    // Se já for uma URL completa, usar como está
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath
+    }
+    
+    // Se for apenas o nome do arquivo, construir a URL completa
+    const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath
+    return `https://catalogopdtstorage.blob.core.windows.net/imagens-stg-v2/produto/${cleanPath}`
+  }
+
+  const handleImageError = (productId: number) => {
+    setImageErrors(prev => ({
+      ...prev,
+      [productId]: true
+    }))
   }
 
   const formatPrice = (price: number) => {
@@ -58,6 +85,8 @@ export default function EnhancedProductsList({
       <div className="space-y-3">
         {products.map((product, index) => {
           const isNew = !animatedItems.includes(product.id.toString())
+          const imageUrl = getImageUrl(product.imageUrl)
+          const hasImageError = imageErrors[product.id]
           
           return (
             <div 
@@ -72,8 +101,41 @@ export default function EnhancedProductsList({
               }}
             >
               {/* Product Info */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
+              <div className="flex items-start gap-3 mb-4">
+                {/* Product Image */}
+                <div className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
+                  {imageUrl && !hasImageError ? (
+                    <Image
+                      src={imageUrl}
+                      alt={product.name || 'Produto'}
+                      width={64}
+                      height={64}
+                      className="w-full h-full object-cover"
+                      onError={() => handleImageError(product.id)}
+                      priority={false}
+                      unoptimized={true}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                      <svg 
+                        className="w-6 h-6 text-gray-400" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2} 
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2z" 
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Product Details */}
+                <div className="flex-1 min-w-0">
                   <h4 className="text-[16px] font-medium text-[#242424] mb-1">
                     {product.name}
                   </h4>
@@ -90,15 +152,30 @@ export default function EnhancedProductsList({
               <div className="flex items-center justify-between pt-3 border-t border-[#F3F4F6]">
                 {/* Quantity Control */}
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleUpdateQuantity(product.id, product.quantity - 1)}
-                    disabled={product.quantity <= 1}
-                    className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:text-[#242424] hover:bg-[#F9FAFB] disabled:opacity-30 disabled:cursor-not-allowed transition-colors rounded-[8px]"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M5 12h14"/>
-                    </svg>
-                  </button>
+                  {product.quantity === 1 ? (
+                    <button
+                      onClick={() => handleRemoveProduct(product.id)}
+                      className="w-8 h-8 flex items-center justify-center text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors rounded-[8px] group"
+                      title="Remover produto"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="m3 6 18 0"/>
+                        <path d="m19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                        <path d="m8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                        <line x1="10" x2="10" y1="11" y2="17"/>
+                        <line x1="14" x2="14" y1="11" y2="17"/>
+                      </svg>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleUpdateQuantity(product.id, product.quantity - 1)}
+                      className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:text-[#242424] hover:bg-[#F9FAFB] transition-colors rounded-[8px]"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M5 12h14"/>
+                      </svg>
+                    </button>
+                  )}
                   
                   <div className="w-12 text-center">
                     <span className="text-[16px] font-medium text-[#242424]">

@@ -30,6 +30,31 @@ export function useProductSearch() {
     hasSearched: false
   })
 
+  // Função auxiliar para buscar informações do veículo
+  const buscarInformacoesVeiculo = useCallback(async (placa: string) => {
+    const termosComuns = ['filtro', 'oleo', 'pastilha', 'disco', 'vela', 'freio', 'correia']
+    
+    for (const termo of termosComuns) {
+      try {
+        console.log(`Tentando buscar informações do veículo com termo: ${termo}`)
+        const response = await apiService.buscarProdutosV2(placa, termo, 0, 1)
+        console.log('Resposta da API SearchV2:', response.pageResult)
+        if (response.pageResult.vehicle) {
+          console.log('Informações do veículo encontradas:', response.pageResult.vehicle)
+          setState(prev => ({
+            ...prev,
+            veiculoInfo: response.pageResult.vehicle
+          }))
+          return response.pageResult.vehicle
+        }
+      } catch (error) {
+        console.log(`Erro ao buscar com termo ${termo}:`, error)
+        continue // Tenta o próximo termo
+      }
+    }
+    return null
+  }, [])
+
   // Buscar produtos filhos baseado na placa para gerar array de nomes
   const buscarProdutosFilho = useCallback(async (placa: string) => {
     if (!placa.trim()) return
@@ -37,16 +62,17 @@ export function useProductSearch() {
     setState(prev => ({ ...prev, isLoading: true, error: null }))
 
     try {
+      // Primeiro buscar produtos filhos
       const response = await apiService.buscarProdutosFilho(placa)
       
       if (response.pageResult.count === 0) {
         setState(prev => ({
           ...prev,
-          isLoading: false,
-          error: 'Nenhum produto encontrado para esta placa.',
+          isLoading: true, // Manter loading ativo
+          error: null,
           produtosFilho: [],
           nomesProdutos: [],
-          hasSearched: true
+          hasSearched: false // Não marcar como pesquisado
         }))
         return
       }
@@ -55,6 +81,26 @@ export function useProductSearch() {
       const nomesProdutos = [...new Set(
         produtosFilho.map(produto => produto.nomeProduto.trim())
       )].filter(nome => nome.length > 0)
+
+      // Buscar informações do veículo usando a função auxiliar
+      if (nomesProdutos.length > 0) {
+        // Primeiro tenta com o produto encontrado
+        try {
+          const vehicleResponse = await apiService.buscarProdutosV2(placa, nomesProdutos[0], 0, 1)
+          if (vehicleResponse.pageResult.vehicle) {
+            setState(prev => ({
+              ...prev,
+              veiculoInfo: vehicleResponse.pageResult.vehicle
+            }))
+          }
+        } catch {
+          // Se falhar, usa a função auxiliar com termos comuns
+          await buscarInformacoesVeiculo(placa)
+        }
+      } else {
+        // Se não tem produtos, usa a função auxiliar
+        await buscarInformacoesVeiculo(placa)
+      }
 
       setState(prev => ({
         ...prev,
@@ -92,10 +138,10 @@ export function useProductSearch() {
       if (response.pageResult.count === 0) {
         setState(prev => ({
           ...prev,
-          isLoading: false,
-          error: 'Nenhum produto encontrado para esta busca.',
+          isLoading: true, // Manter loading ativo
+          error: null,
           produtosEncontrados: [],
-          hasSearched: true
+          hasSearched: false // Não marcar como pesquisado
         }))
         return
       }
@@ -177,6 +223,7 @@ export function useProductSearch() {
     ...state,
     buscarProdutosFilho,
     buscarProdutos,
+    buscarInformacoesVeiculo,
     buscarSugestoes,
     encontrarMelhorMatch,
     resetSearch

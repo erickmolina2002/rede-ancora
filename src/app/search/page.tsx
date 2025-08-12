@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useState, useCallback, useEffect } from 'react'
+
+export const dynamic = 'force-dynamic';
 // import Image from 'next/image'
 import { useProductSearch } from '../hooks/useProductSearch'
 // import { useCart } from '../contexts/CartContext'

@@ -22,10 +22,16 @@ type ProductsFoundModalProps = {
     montadora: string;
     modelo: string;
     versao: string;
-    anoFabricacao: string;
-    anoModelo: string;
+    chassi: string;
     motor: string;
     combustivel: string;
+    cambio: string;
+    carroceria: string;
+    anoFabricacao: string;
+    anoModelo: string;
+    linha: string;
+    eixos: string | null;
+    geracao: string;
   } | null
 }
 

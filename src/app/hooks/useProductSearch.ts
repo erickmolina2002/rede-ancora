@@ -11,10 +11,16 @@ export interface ProductSearchState {
     montadora: string;
     modelo: string;
     versao: string;
-    anoFabricacao: string;
-    anoModelo: string;
+    chassi: string;
     motor: string;
     combustivel: string;
+    cambio: string;
+    carroceria: string;
+    anoFabricacao: string;
+    anoModelo: string;
+    linha: string;
+    eixos: string | null;
+    geracao: string;
   } | null
   hasSearched: boolean
 }
@@ -119,7 +125,7 @@ export function useProductSearch() {
         hasSearched: true
       }))
     }
-  }, [])
+  }, [buscarInformacoesVeiculo])
 
   // Buscar produtos usando Search V2 com superbusca
   const buscarProdutos = useCallback(async (

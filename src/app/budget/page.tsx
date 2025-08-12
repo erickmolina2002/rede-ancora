@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useEffect, Suspense } from 'react'
+
+export const dynamic = 'force-dynamic';
 import { useRouter, useSearchParams } from 'next/navigation'
 import InputScreen from '../ui/InputScreen'
 import { useStepFlow } from '../hooks/useStepFlow'

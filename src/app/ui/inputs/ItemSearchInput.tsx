@@ -34,7 +34,6 @@ export default function ItemSearchInput({
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedItems, setSelectedItems] = useState<Item[]>([])
   const [isClicked, setIsClicked] = useState(false)
-  const [productsTotal, setProductsTotal] = useState(0)
   
   const { items: cartItems } = useCart()
   
@@ -204,9 +203,7 @@ export default function ItemSearchInput({
 
       {/* Enhanced Products List - Shows cart items with quantity and pricing */}
       {cartItems.length > 0 && (
-        <EnhancedProductsList 
-          onTotalChange={setProductsTotal}
-        />
+        <EnhancedProductsList />
       )}
 
       {/* Selected Items List - Shows manually added items only */}

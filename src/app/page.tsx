@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 
+export const dynamic = 'force-dynamic';
+
 export default function Home() {
   const routes = [
     { name: "Budget", path: "/budget", icon: "💰" },

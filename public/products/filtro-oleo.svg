@@ -1,0 +1,37 @@
+<svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="300" height="300" fill="#FFFFFF"/>
+
+  <!-- Shadow -->
+  <ellipse cx="150" cy="260" rx="80" ry="15" fill="#E5E7EB" opacity="0.5"/>
+
+  <!-- Filtro de Óleo - Corpo principal -->
+  <rect x="100" y="90" width="100" height="140" rx="8" fill="#1E3A8A" stroke="#1E40AF" stroke-width="2"/>
+
+  <!-- Tampa superior -->
+  <ellipse cx="150" cy="90" rx="50" ry="12" fill="#2563EB"/>
+  <ellipse cx="150" cy="90" rx="50" ry="8" fill="#3B82F6"/>
+
+  <!-- Rosca central da tampa -->
+  <circle cx="150" cy="90" r="18" fill="#1E293B" stroke="#334155" stroke-width="1.5"/>
+  <circle cx="150" cy="90" r="12" fill="#0F172A"/>
+
+  <!-- Linhas de textura no corpo -->
+  <line x1="110" y1="110" x2="190" y2="110" stroke="#3B82F6" stroke-width="1" opacity="0.3"/>
+  <line x1="110" y1="130" x2="190" y2="130" stroke="#3B82F6" stroke-width="1" opacity="0.3"/>
+  <line x1="110" y1="150" x2="190" y2="150" stroke="#3B82F6" stroke-width="1" opacity="0.3"/>
+  <line x1="110" y1="170" x2="190" y2="170" stroke="#3B82F6" stroke-width="1" opacity="0.3"/>
+  <line x1="110" y1="190" x2="190" y2="190" stroke="#3B82F6" stroke-width="1" opacity="0.3"/>
+  <line x1="110" y1="210" x2="190" y2="210" stroke="#3B82F6" stroke-width="1" opacity="0.3"/>
+
+  <!-- Base inferior -->
+  <ellipse cx="150" cy="230" rx="50" ry="8" fill="#1E3A8A"/>
+  <rect x="100" y="230" width="100" height="8" fill="#1E3A8A"/>
+
+  <!-- Brilho -->
+  <ellipse cx="120" cy="120" rx="20" ry="40" fill="white" opacity="0.15"/>
+
+  <!-- Texto da marca -->
+  <text x="150" y="155" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">TECFIL</text>
+  <text x="150" y="175" font-family="Arial, sans-serif" font-size="10" fill="#93C5FD" text-anchor="middle">OIL FILTER</text>
+</svg>

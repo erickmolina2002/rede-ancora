@@ -1,0 +1,33 @@
+<svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="300" height="300" fill="#F9FAFB"/>
+  
+  <!-- Border -->
+  <rect x="1" y="1" width="298" height="298" stroke="#E5E7EB" stroke-width="2" fill="none"/>
+  
+  <!-- Icon - Caixa/Pacote -->
+  <g transform="translate(100, 80)">
+    <!-- Caixa base -->
+    <rect x="20" y="50" width="60" height="50" fill="#D1D5DB" stroke="#9CA3AF" stroke-width="2"/>
+    
+    <!-- Tampa -->
+    <path d="M 20 50 L 50 30 L 80 50 Z" fill="#E5E7EB" stroke="#9CA3AF" stroke-width="2"/>
+    
+    <!-- Lado -->
+    <path d="M 80 50 L 80 100 L 50 120 L 50 70 Z" fill="#D1D5DB" stroke="#9CA3AF" stroke-width="2"/>
+    
+    <!-- Detalhe tampa -->
+    <line x1="35" y1="40" x2="35" y2="60" stroke="#9CA3AF" stroke-width="1.5"/>
+    <line x1="65" y1="40" x2="65" y2="60" stroke="#9CA3AF" stroke-width="1.5"/>
+  </g>
+  
+  <!-- Texto -->
+  <text x="150" y="220" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#6B7280" text-anchor="middle" font-weight="500">
+    Produto Automotivo
+  </text>
+  
+  <!-- Subtexto -->
+  <text x="150" y="240" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#9CA3AF" text-anchor="middle">
+    Imagem indisponivel
+  </text>
+</svg>

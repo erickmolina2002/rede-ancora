@@ -1,0 +1,51 @@
+<svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="300" height="300" fill="#FFFFFF"/>
+
+  <!-- Shadow -->
+  <ellipse cx="150" cy="265" rx="120" ry="8" fill="#E5E7EB" opacity="0.5"/>
+
+  <!-- Palheta - estrutura metálica -->
+  <rect x="50" y="130" width="200" height="12" rx="2" fill="#27272A" stroke="#18181B" stroke-width="1.5"/>
+
+  <!-- Segmentos da estrutura -->
+  <rect x="55" y="132" width="38" height="8" rx="1" fill="#3F3F46"/>
+  <rect x="98" y="132" width="38" height="8" rx="1" fill="#3F3F46"/>
+  <rect x="141" y="132" width="38" height="8" rx="1" fill="#3F3F46"/>
+  <rect x="184" y="132" width="38" height="8" rx="1" fill="#3F3F46"/>
+  <rect x="227" y="132" width="18" height="8" rx="1" fill="#3F3F46"/>
+
+  <!-- Articulações -->
+  <circle cx="93" cy="136" r="4" fill="#52525B" stroke="#71717A" stroke-width="1"/>
+  <circle cx="136" cy="136" r="4" fill="#52525B" stroke="#71717A" stroke-width="1"/>
+  <circle cx="179" cy="136" r="4" fill="#52525B" stroke="#71717A" stroke-width="1"/>
+  <circle cx="222" cy="136" r="4" fill="#52525B" stroke="#71717A" stroke-width="1"/>
+
+  <!-- Borracha limpadora -->
+  <rect x="52" y="142" width="196" height="8" rx="1" fill="#1F2937"/>
+  <rect x="52" y="148" width="196" height="4" rx="1" fill="#111827"/>
+
+  <!-- Adaptador/gancho central -->
+  <rect x="140" y="115" width="20" height="15" rx="2" fill="#52525B" stroke="#3F3F46" stroke-width="1.5"/>
+  <rect x="145" y="110" width="10" height="10" rx="1" fill="#71717A"/>
+  <path d="M 145 110 Q 150 105 155 110" stroke="#3F3F46" stroke-width="2" fill="none"/>
+
+  <!-- Spoiler aerodinâmico -->
+  <path d="M 55 130 L 50 128 L 50 143 L 55 142 Z" fill="#1F2937" opacity="0.8"/>
+  <path d="M 245 130 L 250 128 L 250 143 L 245 142 Z" fill="#1F2937" opacity="0.8"/>
+
+  <!-- Detalhes de brilho -->
+  <rect x="60" y="133" width="60" height="2" rx="1" fill="white" opacity="0.2"/>
+
+  <!-- Etiqueta BOSCH -->
+  <rect x="125" y="120" width="50" height="14" rx="2" fill="#2563EB" opacity="0.95"/>
+  <text x="150" y="129" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="white" text-anchor="middle">BOSCH</text>
+
+  <!-- Marcações laterais -->
+  <text x="70" y="170" font-family="Arial, sans-serif" font-size="8" fill="#6B7280" text-anchor="middle">18"</text>
+  <text x="230" y="170" font-family="Arial, sans-serif" font-size="8" fill="#6B7280" text-anchor="middle">450mm</text>
+
+  <!-- Indicadores de posição -->
+  <circle cx="60" cy="136" r="2" fill="#3B82F6"/>
+  <circle cx="240" cy="136" r="2" fill="#3B82F6"/>
+</svg>

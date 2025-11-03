@@ -1,0 +1,67 @@
+<svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="300" height="300" fill="#FFFFFF"/>
+
+  <!-- Shadow -->
+  <ellipse cx="150" cy="270" rx="100" ry="10" fill="#E5E7EB" opacity="0.5"/>
+
+  <!-- Disco - círculo externo -->
+  <circle cx="150" cy="150" r="105" fill="#52525B" stroke="#3F3F46" stroke-width="3"/>
+
+  <!-- Disco - anel interno ventilado -->
+  <circle cx="150" cy="150" r="95" fill="#71717A"/>
+
+  <!-- Ventilação - slots radiais -->
+  <defs>
+    <g id="vent-slot">
+      <rect x="148" y="60" width="4" height="25" rx="2" fill="#3F3F46"/>
+    </g>
+  </defs>
+
+  <!-- Padrão de ventilação -->
+  <g transform="rotate(0 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(15 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(30 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(45 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(60 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(75 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(90 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(105 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(120 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(135 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(150 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(165 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(180 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(195 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(210 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(225 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(240 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(255 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(270 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(285 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(300 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(315 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(330 150 150)"><use href="#vent-slot"/></g>
+  <g transform="rotate(345 150 150)"><use href="#vent-slot"/></g>
+
+  <!-- Cubo central -->
+  <circle cx="150" cy="150" r="45" fill="#A1A1AA" stroke="#71717A" stroke-width="2"/>
+
+  <!-- Furos de fixação -->
+  <circle cx="150" cy="100" r="10" fill="#3F3F46" stroke="#27272A" stroke-width="1.5"/>
+  <circle cx="193" cy="125" r="10" fill="#3F3F46" stroke="#27272A" stroke-width="1.5"/>
+  <circle cx="193" cy="175" r="10" fill="#3F3F46" stroke="#27272A" stroke-width="1.5"/>
+  <circle cx="150" cy="200" r="10" fill="#3F3F46" stroke="#27272A" stroke-width="1.5"/>
+  <circle cx="107" cy="175" r="10" fill="#3F3F46" stroke="#27272A" stroke-width="1.5"/>
+  <circle cx="107" cy="125" r="10" fill="#3F3F46" stroke="#27272A" stroke-width="1.5"/>
+
+  <!-- Furo central do cubo -->
+  <circle cx="150" cy="150" r="18" fill="#27272A"/>
+
+  <!-- Brilho metálico -->
+  <path d="M 100 100 Q 120 90 140 100 L 120 120 Z" fill="white" opacity="0.15"/>
+
+  <!-- Texto -->
+  <text x="150" y="148" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#27272A" text-anchor="middle">FREMAX</text>
+  <text x="150" y="160" font-family="Arial, sans-serif" font-size="7" fill="#3F3F46" text-anchor="middle">VENTILATED</text>
+</svg>

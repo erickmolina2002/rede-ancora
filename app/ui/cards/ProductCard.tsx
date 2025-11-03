@@ -12,6 +12,7 @@ export type ProductItem = {
   imagemReal: string | null
   preco?: number
   isSimilar?: boolean
+  tipoCompatibilidade?: 'original' | 'compativel'
 }
 
 type ProductCardProps = {
@@ -59,7 +60,8 @@ export default function ProductCard({
       codigoReferencia: produto.codigoReferencia,
       imagemReal: produto.imagemReal,
       preco: produto.preco,
-      isSimilar
+      isSimilar,
+      tipoCompatibilidade: produto.tipoCompatibilidade
     })
   }
 
@@ -76,7 +78,8 @@ export default function ProductCard({
         codigoReferencia: produto.codigoReferencia,
         imagemReal: produto.imagemReal,
         preco: produto.preco,
-        isSimilar
+        isSimilar,
+        tipoCompatibilidade: produto.tipoCompatibilidade
       })
     }
   }
@@ -156,17 +159,17 @@ export default function ProductCard({
   return (
     <div
       onClick={showAddButton && !produto.semEstoque ? handleAdd : undefined}
-      className={`bg-white border border-[#E5E7EB] rounded-lg p-4 transition-all duration-200 relative overflow-hidden ${
+      className={`bg-white border border-[#E5E7EB] rounded-lg p-4 transition-all duration-200 relative ${
         produto.semEstoque
-          ? 'opacity-75 cursor-not-allowed'
+          ? 'opacity-75 cursor-not-allowed overflow-hidden'
           : showAddButton
-          ? 'cursor-pointer hover:border-[#D1D5DB] hover:shadow-sm transform hover:scale-[1.01]'
-          : 'cursor-default'
+          ? 'cursor-pointer hover:border-[#D1D5DB] hover:shadow-sm transform hover:scale-[1.01] overflow-visible'
+          : 'cursor-default overflow-visible'
       }`}
     >
       {/* Indicador de Sem Estoque - Diagonal */}
       {produto.semEstoque && (
-        <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-20">
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-20 overflow-hidden">
           <div className="absolute top-[50%] left-[-35%] w-[170%] bg-red-600 text-white text-center py-2 transform -translate-y-1/2 rotate-[-45deg] shadow-lg">
             <span className="text-[12px] font-bold uppercase tracking-wider">Sem Estoque</span>
           </div>
@@ -184,6 +187,101 @@ export default function ProductCard({
       {isSimilar && !selo && (
         <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium z-10">
           Similar
+        </div>
+      )}
+
+      {/* Botão Adicionar/Contador - Posicionado Absolutamente no canto superior direito */}
+      {showAddButton && !produto.semEstoque && (
+        <div className="absolute top-2 right-2 z-30 pointer-events-auto">
+          {isAdded ? (
+            // Contador de quantidade
+            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 shadow-md">
+              {/* Botão Decrementar ou Remover */}
+              <button
+                onClick={(quantity || 1) === 1 ? handleRemove : handleDecrement}
+                className="w-7 h-7 rounded-md bg-white hover:bg-red-50 flex items-center justify-center transition-colors shadow-sm"
+              >
+                {(quantity || 1) === 1 ? (
+                  // Ícone de Lixeira
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#DC2626"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                  </svg>
+                ) : (
+                  // Ícone de Menos
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#6B7280"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  >
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                )}
+              </button>
+
+              {/* Quantidade */}
+              <span className="min-w-[24px] text-center text-[14px] font-semibold text-gray-700">
+                {quantity || 1}
+              </span>
+
+              {/* Botão Incrementar */}
+              <button
+                onClick={handleIncrement}
+                className="w-7 h-7 rounded-md bg-white hover:bg-green-50 flex items-center justify-center transition-colors shadow-sm"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#16A34A"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </button>
+            </div>
+          ) : (
+            // Botão Adicionar
+            <div
+              className={`w-8 h-8 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center transition-all duration-200 transform ${
+                isAdding ? 'animate-pulse scale-95' : 'hover:scale-110'
+              }`}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                className={`transition-transform duration-200 ${
+                  isAdding ? 'rotate-90' : ''
+                }`}
+              >
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </div>
+          )}
         </div>
       )}
 
@@ -257,101 +355,6 @@ export default function ProductCard({
             )}
           </div>
         </div>
-
-        {/* Botão Adicionar/Contador - SEMPRE COM OPACIDADE 100% */}
-        {showAddButton && !produto.semEstoque && (
-          <div className="flex-shrink-0 opacity-100">
-            {isAdded ? (
-              // Contador de quantidade
-              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                {/* Botão Decrementar ou Remover */}
-                <button
-                  onClick={(quantity || 1) === 1 ? handleRemove : handleDecrement}
-                  className="w-7 h-7 rounded-md bg-white hover:bg-red-50 flex items-center justify-center transition-colors shadow-sm"
-                >
-                  {(quantity || 1) === 1 ? (
-                    // Ícone de Lixeira
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#DC2626"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polyline points="3 6 5 6 21 6"></polyline>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                      <line x1="10" y1="11" x2="10" y2="17"></line>
-                      <line x1="14" y1="11" x2="14" y2="17"></line>
-                    </svg>
-                  ) : (
-                    // Ícone de Menos
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#6B7280"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    >
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                  )}
-                </button>
-
-                {/* Quantidade */}
-                <span className="min-w-[24px] text-center text-[14px] font-semibold text-gray-700">
-                  {quantity || 1}
-                </span>
-
-                {/* Botão Incrementar */}
-                <button
-                  onClick={handleIncrement}
-                  className="w-7 h-7 rounded-md bg-white hover:bg-green-50 flex items-center justify-center transition-colors shadow-sm"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#16A34A"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  >
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                  </svg>
-                </button>
-              </div>
-            ) : (
-              // Botão Adicionar
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 transform ${
-                  isAdding ? 'animate-pulse scale-95' : 'hover:scale-110'
-                }`}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  className={`transition-transform duration-200 ${
-                    isAdding ? 'rotate-90' : ''
-                  }`}
-                >
-                  <line x1="12" y1="5" x2="12" y2="19"></line>
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   )

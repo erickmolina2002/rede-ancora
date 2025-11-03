@@ -17,7 +17,7 @@ const allProducts = [
   {
     id: 1,
     name: "Flange Conexão Com Tampa Mangueira Radiador Freemont Journey",
-    image: "/placeholder.svg?height=200&width=200",
+    image: "/images/flange-conexao-mangueira-radiador-freemont-journey.jpg",
     price: 134.92,
     originalPrice: 183.16,
     discount: 26,
@@ -27,7 +27,7 @@ const allProducts = [
   {
     id: 2,
     name: "Par Encolhedor De Mola Traseira E Dianteira Universal Ref.",
-    image: "/placeholder.svg?height=200&width=200",
+    image: "/images/par-encolhedor-mola-traseira-dianteira-universal.jpg",
     price: 574.92,
     originalPrice: 749.92,
     discount: 23,
@@ -37,7 +37,7 @@ const allProducts = [
   {
     id: 3,
     name: "Kit Limpador Para-brisa C/ Reservatório Fiesta Hatch/Sedan 1.0",
-    image: "/placeholder.svg?height=150&width=150",
+    image: "/images/kit-limpador-parabrisa-reservatorio-fiesta.jpg",
     price: 138.54,
     inStock: true,
     category: "abrantes",
@@ -45,7 +45,7 @@ const allProducts = [
   {
     id: 4,
     name: "Jogo Pastilha Freio Dianteiro Fiesta Hatch/Sedan 1.0",
-    image: "/placeholder.svg?height=150&width=150",
+    image: "/images/jogo-pastilha-freio-dianteiro-fiesta.jpg",
     price: 87.85,
     inStock: true,
     category: "abrantes",
@@ -53,7 +53,7 @@ const allProducts = [
   {
     id: 5,
     name: "Mangueira Inferior Radiador Fiesta 1.0 1.6 8v 16v",
-    image: "/placeholder.svg?height=150&width=150",
+    image: "/images/mangueira-inferior-radiador-fiesta.jpg",
     price: 156.3,
     inStock: true,
     category: "motores",
@@ -61,7 +61,7 @@ const allProducts = [
   {
     id: 6,
     name: "Bomba D'água Fiesta 1.0 Zetec Rocam",
-    image: "/placeholder.svg?height=150&width=150",
+    image: "/images/bomba-agua-fiesta-zetec-rocam.jpg",
     price: 134.47,
     inStock: true,
     category: "motores",
@@ -69,7 +69,7 @@ const allProducts = [
   {
     id: 7,
     name: "Filtro De Óleo Lubrificante Fiesta 1.0 1.6",
-    image: "/placeholder.svg?height=150&width=150",
+    image: "/images/filtro-oleo-fiesta.jpg",
     price: 34.87,
     inStock: true,
     category: "combustivel",
@@ -77,12 +77,14 @@ const allProducts = [
   {
     id: 8,
     name: "Vela De Ignição Fiesta 1.0 1.6 Zetec Rocam",
-    image: "/placeholder.svg?height=150&width=150",
+    image: "/images/vela-ignicao-fiesta.jpg",
     price: 110.85,
     inStock: true,
     category: "injecao",
   },
 ]
+
+
 
 function CatalogContent() {
   const searchParams = useSearchParams()

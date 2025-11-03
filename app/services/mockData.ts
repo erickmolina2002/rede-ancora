@@ -342,7 +342,9 @@ export const mockVehicles = [
 export function getVehicleByPlate(placa: string): typeof mockVehicles[0] {
   // Seleciona um veículo aleatório a cada chamada
   const randomIndex = Math.floor(Math.random() * mockVehicles.length)
-  return mockVehicles[randomIndex]
+  const selectedVehicle = mockVehicles[randomIndex]
+  console.log(`[GET VEHICLE] Placa: ${placa}, Index aleatório: ${randomIndex}, Veículo: ${selectedVehicle.montadora} ${selectedVehicle.modelo}`)
+  return selectedVehicle
 }
 
 // Mantém compatibilidade com código existente

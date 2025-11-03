@@ -105,7 +105,7 @@ export default function EnhancedProductsList({
               }}
             >
               {/* Product Info */}
-              <div className="flex items-start gap-3 mb-4">
+              <div className="flex items-start gap-3 mb-2">
                 {/* Product Image */}
                 <div className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
                   {imageUrl && !hasImageError ? (
@@ -153,7 +153,7 @@ export default function EnhancedProductsList({
               </div>
 
               {/* Quantity and Total */}
-              <div className="flex items-center justify-between pt-3 border-t border-[#F3F4F6]">
+              <div className="flex items-center justify-between border-t border-[#F3F4F6]">
                 {/* Quantity Control */}
                 <div className="flex items-center gap-2">
                   {product.quantity === 1 ? (

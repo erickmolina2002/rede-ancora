@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useVehicle } from '../../contexts/VehicleContext'
-import { mockVehicleInfo } from '../../services/mockData'
+import { getVehicleByPlate } from '../../services/mockData'
 
 type PlateConfirmationInputProps = {
   value: string
@@ -27,51 +27,29 @@ export default function PlateConfirmationInput({
   const [editValue, setEditValue] = useState('')
   const { vehicleInfo, setVehicleInfo } = useVehicle()
 
-  // Initialize with plate from previous step and load vehicle info directly from mock
+  // Initialize with plate from previous step and load vehicle info randomly
   useEffect(() => {
     if (!value && stepData.budgetDescription) {
       const plateValue = String(stepData.budgetDescription)
       onChange(plateValue)
 
-      // Carregar mock direto
-      console.log('[PLATE CONFIRMATION] Carregando mock direto para placa:', plateValue)
+      // Carregar veículo aleatório
+      console.log('[PLATE CONFIRMATION] Carregando veículo aleatório para placa:', plateValue)
+      const randomVehicle = getVehicleByPlate(plateValue)
       setVehicleInfo({
         placa: plateValue.toUpperCase(),
-        montadora: mockVehicleInfo.montadora,
-        modelo: mockVehicleInfo.modelo,
-        versao: mockVehicleInfo.versao,
-        chassi: mockVehicleInfo.chassi,
-        motor: mockVehicleInfo.motor,
-        combustivel: mockVehicleInfo.combustivel,
-        cambio: mockVehicleInfo.cambio,
-        carroceria: mockVehicleInfo.carroceria,
-        anoFabricacao: mockVehicleInfo.anoFabricacao,
-        anoModelo: mockVehicleInfo.anoModelo,
-        linha: mockVehicleInfo.linha,
-        eixos: mockVehicleInfo.eixos,
-        geracao: mockVehicleInfo.geracao
+        ...randomVehicle
       })
-      console.log('[PLATE CONFIRMATION] Mock carregado')
+      console.log('[PLATE CONFIRMATION] Veículo carregado:', randomVehicle.montadora, randomVehicle.modelo)
     } else if (value && !vehicleInfo) {
-      // Se já tem placa mas não tem info do veículo, carregar mock
-      console.log('[PLATE CONFIRMATION] Carregando mock para placa existente:', value)
+      // Se já tem placa mas não tem info do veículo, carregar aleatório
+      console.log('[PLATE CONFIRMATION] Carregando veículo aleatório para placa existente:', value)
+      const randomVehicle = getVehicleByPlate(value)
       setVehicleInfo({
         placa: value.toUpperCase(),
-        montadora: mockVehicleInfo.montadora,
-        modelo: mockVehicleInfo.modelo,
-        versao: mockVehicleInfo.versao,
-        chassi: mockVehicleInfo.chassi,
-        motor: mockVehicleInfo.motor,
-        combustivel: mockVehicleInfo.combustivel,
-        cambio: mockVehicleInfo.cambio,
-        carroceria: mockVehicleInfo.carroceria,
-        anoFabricacao: mockVehicleInfo.anoFabricacao,
-        anoModelo: mockVehicleInfo.anoModelo,
-        linha: mockVehicleInfo.linha,
-        eixos: mockVehicleInfo.eixos,
-        geracao: mockVehicleInfo.geracao
+        ...randomVehicle
       })
-      console.log('[PLATE CONFIRMATION] Mock carregado')
+      console.log('[PLATE CONFIRMATION] Veículo carregado:', randomVehicle.montadora, randomVehicle.modelo)
     }
   }, [value, stepData.budgetDescription, onChange, vehicleInfo, setVehicleInfo])
 
@@ -87,24 +65,14 @@ export default function PlateConfirmationInput({
 
   const handleSave = () => {
     if (editValue.trim()) {
-      // Carregar mock direto
-      console.log('[PLATE CONFIRMATION] Salvando com mock direto')
+      // Carregar veículo aleatório ao editar
+      console.log('[PLATE CONFIRMATION] Salvando com novo veículo aleatório')
+      const randomVehicle = getVehicleByPlate(editValue.trim())
       setVehicleInfo({
         placa: editValue.trim().toUpperCase(),
-        montadora: mockVehicleInfo.montadora,
-        modelo: mockVehicleInfo.modelo,
-        versao: mockVehicleInfo.versao,
-        chassi: mockVehicleInfo.chassi,
-        motor: mockVehicleInfo.motor,
-        combustivel: mockVehicleInfo.combustivel,
-        cambio: mockVehicleInfo.cambio,
-        carroceria: mockVehicleInfo.carroceria,
-        anoFabricacao: mockVehicleInfo.anoFabricacao,
-        anoModelo: mockVehicleInfo.anoModelo,
-        linha: mockVehicleInfo.linha,
-        eixos: mockVehicleInfo.eixos,
-        geracao: mockVehicleInfo.geracao
+        ...randomVehicle
       })
+      console.log('[PLATE CONFIRMATION] Novo veículo carregado:', randomVehicle.montadora, randomVehicle.modelo)
 
       onChange(editValue.trim().toUpperCase())
       setIsEditing(false)

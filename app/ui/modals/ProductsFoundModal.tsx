@@ -235,7 +235,7 @@ export default function ProductsFoundModal({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-4">
           {/* Loading */}
           {isLoading && (
             <LoadingSpinner message="Carregando produtos..." />
@@ -253,7 +253,7 @@ export default function ProductsFoundModal({
 
           {/* Products */}
           {!isLoading && !error && produtosPaginados.length > 0 && (
-            <div>
+            <div className="pb-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-[16px] font-medium text-[#242424]">
                   Produtos Encontrados ({produtos.length})

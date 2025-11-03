@@ -12,6 +12,7 @@ export type ProductWithPricing = {
   unitPrice: number
   quantity: number
   totalPrice: number
+  tipoCompatibilidade?: 'original' | 'compativel'
   originalProduct: ProductItem
 }
 
@@ -59,6 +60,7 @@ export function ProductsBudgetProvider({ children }: { children: ReactNode }) {
         unitPrice,
         quantity: 1,
         totalPrice: unitPrice,
+        tipoCompatibilidade: product.tipoCompatibilidade,
         originalProduct: product
       }
 

@@ -134,32 +134,10 @@ export default function ProductCard({
     }).format(price)
   }
 
-  // Configuração dos selos
-  const getSelo = () => {
-    if (!produto.tipoCompatibilidade) return null
-
-    const selos = {
-      original: {
-        label: 'Original',
-        bgColor: 'bg-green-600',
-        textColor: 'text-white'
-      },
-      compativel: {
-        label: 'Compatível',
-        bgColor: 'bg-blue-500',
-        textColor: 'text-white'
-      }
-    }
-
-    return selos[produto.tipoCompatibilidade]
-  }
-
-  const selo = getSelo()
-
   return (
     <div
       onClick={showAddButton && !produto.semEstoque ? handleAdd : undefined}
-      className={`bg-white border border-[#E5E7EB] rounded-lg p-4 transition-all duration-200 relative ${
+      className={`bg-white border border-[#E5E7EB] rounded-lg p-4 transition-all duration-200 relative h-[110px] ${
         produto.semEstoque
           ? 'opacity-75 cursor-not-allowed overflow-hidden'
           : showAddButton
@@ -176,17 +154,13 @@ export default function ProductCard({
         </div>
       )}
 
-      {/* Selo de Tipo de Compatibilidade - Canto Inferior Direito */}
-      {selo && (
-        <div className={`absolute bottom-2 right-2 ${selo.bgColor} ${selo.textColor} text-[10px] px-2 py-1 rounded font-semibold shadow-sm z-10 uppercase tracking-wide`}>
-          {selo.label}
+      {/* Selo de Similar ou Original */}
+      {isSimilar ? (
+        <div className="">
         </div>
-      )}
-
-      {/* Selo de Similar (mantido para compatibilidade) */}
-      {isSimilar && !selo && (
-        <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium z-10">
-          Similar
+      ) : (
+        <div className="absolute top-[76px] left-[250px] bg-green-600 text-white text-[10px] rounded font-semibold px-2 py-1 font-medium z-10">
+          ORIGINAL
         </div>
       )}
 
@@ -261,8 +235,8 @@ export default function ProductCard({
           ) : (
             // Botão Adicionar
             <div
-              className={`w-8 h-8 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center transition-all duration-200 transform ${
-                isAdding ? 'animate-pulse scale-95' : 'hover:scale-110'
+              className={`w-4 h-4 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center transition-all duration-200 transform ${
+                isAdding ? 'animate-pulse scale-65' : 'hover:scale-85'
               }`}
             >
               <svg
@@ -291,14 +265,14 @@ export default function ProductCard({
           isAdded ? 'opacity-50' : 'opacity-100'
         }`}>
           {/* Imagem do Produto */}
-          <div className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
+          <div className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
             {imageUrl && !imageError ? (
               <Image
                 src={imageUrl}
                 alt={produto.nomeProduto || 'Produto'}
                 width={64}
                 height={64}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 onError={() => setImageError(true)}
                 onLoadingComplete={() => setImageError(false)}
                 priority={false}
@@ -325,25 +299,18 @@ export default function ProductCard({
 
           {/* Informações do Produto */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-[16px] font-medium text-[#242424] mb-1 line-clamp-2">
+            <h3 className="text-[16px] font-medium text-[#242424] line-clamp-2 break-words">
               {produto.nomeProduto}
             </h3>
 
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[14px] font-medium text-[#6B7280]">
+            <div className="flex flex-col items-start ">
+              <span className={`font-medium text-[#6B7280] break-words ${produto.marca.length > 12 ? 'text-[12px]' : 'text-[14px]'}`}>
                 {produto.marca}
               </span>
-              <span className="text-[12px] text-[#9CA3AF]">•</span>
-              <span className="text-[14px] text-[#6B7280]">
+              <span className={`text-[#6B7280] flex-shrink-0 ${produto.codigoReferencia.length > 1 ? 'text-[12px]' : 'text-[14px]'}`}>
                 {produto.codigoReferencia}
               </span>
             </div>
-
-            {produto.informacoesComplementares && (
-              <p className="text-[12px] text-[#9CA3AF] line-clamp-1">
-                {produto.informacoesComplementares}
-              </p>
-            )}
 
             {/* Preço */}
             {produto.preco && (

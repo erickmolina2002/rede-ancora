@@ -5,7 +5,7 @@ import Image from 'next/image'
 import SearchModal from '../modals/SearchModal'
 import SelectedItemsList from '../lists/SelectedItemsList'
 import EnhancedProductsList from '../lists/EnhancedProductsList'
-import { useCart } from '../../contexts/CartContext'
+import { useProductsBudget } from '../../contexts/ProductsBudgetContext'
 import { Item } from '../cards/ItemCard'
 import { ProductItem } from '../cards/ProductCard'
 
@@ -34,24 +34,25 @@ export default function ItemSearchInput({
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedItems, setSelectedItems] = useState<Item[]>([])
   const [isClicked, setIsClicked] = useState(false)
-  
-  const { items: cartItems } = useCart()
-  
-  // Convert cart items to Item format for display
-  const cartAsItems: Item[] = cartItems.map(item => ({
-    id: item.id.toString(),
-    name: item.nomeProduto,
-    subtitle: `${item.marca} - ${item.codigoReferencia}`,
-    price: 0
+
+  const { products, getTotalItems } = useProductsBudget()
+
+  // Convert products to Item format for display
+  const productsAsItems: Item[] = products.map(product => ({
+    id: product.id.toString(),
+    name: product.name,
+    subtitle: `${product.brand} - ${product.code}`,
+    price: product.unitPrice
   }))
-  
-  // Combine cart items with manually added items (avoiding duplicates)
+
+  // Combine products with manually added items (avoiding duplicates)
   const allSelectedItems = [
-    ...cartAsItems,
-    ...selectedItems.filter(item => !cartAsItems.find(cartItem => cartItem.id === item.id))
+    ...productsAsItems,
+    ...selectedItems.filter(item => !productsAsItems.find(product => product.id === item.id))
   ]
-  
-  const hasItems = allSelectedItems.length > 0
+
+  const hasItems = products.length > 0 || selectedItems.length > 0
+  const totalItemCount = getTotalItems() + selectedItems.length
 
   const handleFocus = () => {
     setIsFocused(true)
@@ -76,14 +77,14 @@ export default function ItemSearchInput({
       price: 0 // Products from API don't have price, setting to 0
     } : item as Item
 
-    // Check if item is already added (including cart items)
+    // Check if item is already added (including products)
     if (!allSelectedItems.find(selected => selected.id === normalizedItem.id)) {
       const newItems = [...selectedItems, normalizedItem]
       setSelectedItems(newItems)
-      
+
       // Update the form value with total items count
-      const totalItems = cartAsItems.length + newItems.length
-      const itemsText = totalItems === 1 
+      const totalItems = productsAsItems.length + newItems.length
+      const itemsText = totalItems === 1
         ? `${totalItems} produto selecionado`
         : `${totalItems} produtos selecionados`
       onChange(itemsText)
@@ -92,21 +93,21 @@ export default function ItemSearchInput({
   }
 
   const handleItemRemove = (itemId: string) => {
-    // Only allow removing manually added items, not cart items
-    const isCartItem = cartAsItems.find(item => item.id === itemId)
-    if (isCartItem) {
-      // Don't remove cart items from here - they should be managed by the cart
+    // Only allow removing manually added items, not products from budget
+    const isProductItem = productsAsItems.find(item => item.id === itemId)
+    if (isProductItem) {
+      // Don't remove products from here - they should be managed by the budget context
       return
     }
-    
+
     const newItems = selectedItems.filter(item => item.id !== itemId)
     setSelectedItems(newItems)
-    
-    const totalItems = cartAsItems.length + newItems.length
+
+    const totalItems = productsAsItems.length + newItems.length
     if (totalItems === 0) {
       onChange('')
     } else {
-      const itemsText = totalItems === 1 
+      const itemsText = totalItems === 1
         ? `${totalItems} produto selecionado`
         : `${totalItems} produtos selecionados`
       onChange(itemsText)
@@ -117,26 +118,18 @@ export default function ItemSearchInput({
     setIsModalOpen(false)
   }
 
-  const getDisplayValue = () => {
-    if (allSelectedItems.length === 0) return ''
-    
-    return allSelectedItems.length === 1 
-      ? `${allSelectedItems.length} produto selecionado`
-      : `${allSelectedItems.length} produtos selecionados`
-  }
-
-  // Update form value when cart items change
+  // Update form value when products change
   useEffect(() => {
     const totalItems = allSelectedItems.length
     if (totalItems > 0) {
-      const itemsText = totalItems === 1 
+      const itemsText = totalItems === 1
         ? `${totalItems} produto selecionado`
         : `${totalItems} produtos selecionados`
       onChange(itemsText)
-    } else if (cartItems.length === 0 && selectedItems.length === 0) {
+    } else if (products.length === 0 && selectedItems.length === 0) {
       onChange('')
     }
-  }, [cartItems, selectedItems, onChange, allSelectedItems.length])
+  }, [products, selectedItems, onChange, allSelectedItems.length])
 
   return (
     <div className={`w-full ${className}`}>
@@ -152,9 +145,9 @@ export default function ItemSearchInput({
           onFocus={handleFocus}
           onBlur={handleBlur}
           tabIndex={0}
-          className={`w-full text-[18px] pb-[16px] pl-[50px] pr-4 text-base focus:outline-none cursor-pointer transition-all duration-300 transform hover:scale-[1.01] ${
-            hasItems ? 'text-[#059669]' : 'text-[#C6C8CB]'
-          } ${isClicked ? 'scale-[0.99]' : ''} border-b-0`}
+          className={`w-full text-[18px] pb-[8px] pl-[40px] pr-4 text-base focus:outline-none cursor-pointer transition-all duration-300 transform hover:scale-[1.01] text-[#C6C8CB] ${
+            isClicked ? 'scale-[0.99]' : ''
+          } border-b-0`}
           aria-label={label || "Adicionar serviços"}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -164,11 +157,11 @@ export default function ItemSearchInput({
             onKeyDown?.(e)
           }}
         >
-          {getDisplayValue() || placeholder}
+          {placeholder}
         </div>
         
         {/* Plus Icon with animation */}
-        <div className={`absolute left-0 top-0 p-2 pointer-events-none transition-all duration-200 ${
+        <div className={`absolute left-0 top-0 pt-[4px] pl-[8px] pointer-events-none transition-all duration-200 ${
           isClicked ? 'scale-110 rotate-90' : 'scale-100 rotate-0'
         }`}>
           <svg
@@ -187,12 +180,10 @@ export default function ItemSearchInput({
         </div>
         
         {/* Animated border */}
-        <div 
+        <div
           className={`absolute bottom-0 left-0 h-[2px] w-full transition-all duration-300 ease-out ${
-            isFocused || hasItems 
-              ? hasItems
-                ? 'bg-[#059669] transform translate-y-[-4px]'
-                : 'bg-black transform translate-y-[-4px]'
+            isFocused
+              ? 'bg-black transform translate-y-[-4px]'
               : 'bg-[#E5E7EB] transform translate-y-0'
           }`}
         />
@@ -207,8 +198,8 @@ export default function ItemSearchInput({
         </div>
       )}
 
-      {/* Enhanced Products List - Shows cart items with quantity and pricing */}
-      {cartItems.length > 0 && (
+      {/* Enhanced Products List - Shows products with quantity and pricing */}
+      {products.length > 0 && (
         <EnhancedProductsList />
       )}
 

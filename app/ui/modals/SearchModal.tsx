@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Button from '../Button'
 import LoadingSpinner from '../components/LoadingSpinner'
-import { useCart } from '../../contexts/CartContext'
 import { useProductsBudget } from '../../contexts/ProductsBudgetContext'
 import { useVehicle } from '../../contexts/VehicleContext'
 import { useProductSearch } from '../../hooks/useProductSearch'
@@ -32,8 +31,7 @@ export default function SearchModal({
   const [selectedProductName, setSelectedProductName] = useState<string>('')
   const [searchFilter, setSearchFilter] = useState<string>('')
 
-  const { getTotalItems } = useCart()
-  const { hasProducts } = useProductsBudget()
+  const { hasProducts, getTotalItems } = useProductsBudget()
   const { setVehicleInfo } = useVehicle()
   const router = useRouter()
 
@@ -201,7 +199,7 @@ export default function SearchModal({
           {!isLoading && !error && nomesProdutos.length > 0 && (
             <div className="h-full px-4">
               <div className="space-y-3">
-                {nomesProdutos.map((nomeProduto, index) => (
+                {produtosFiltrados.map((nomeProduto, index) => (
                   <div
                     key={index}
                     onClick={() => handleProductSelect(nomeProduto)}
@@ -229,6 +227,25 @@ export default function SearchModal({
           )}
 
           {/* Empty States */}
+          {!isLoading && !error && nomesProdutos.length === 0 && placa && (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <p className="text-[#6B7280] text-[16px] mb-2">
+                  Nenhum produto encontrado para esta placa
+                </p>
+                <p className="text-[#9CA3AF] text-[14px]">
+                  Placa: {placa}
+                </p>
+                <button
+                  onClick={() => buscarProdutosFilho(placa)}
+                  className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-[14px]"
+                >
+                  Tentar novamente
+                </button>
+              </div>
+            </div>
+          )}
+
           {!isLoading && !error && nomesProdutos.length === 0 && !placa && (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">

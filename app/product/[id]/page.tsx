@@ -8,22 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-const getProductDetails = (id: number) => {
-  return {
-    id,
-    nomeProduto: "Flange Conexão Com Tampa Mangueira Radiador Freemont Journey",
-    marca: "Original",
-    imagemReal: null,
-    imagemIlustrativa: null,
-    preco: 134.92,
-    estoque: 15,
-    codigoReferencia: "FLG123",
-    dimensoes: "ALT.: 50mm - ØEXT.: 75mm",
-    informacoesComplementares:
-      "Flange de conexão com tampa para mangueira do radiador, compatível com Freemont e Journey. Produto de alta qualidade e durabilidade.",
-  }
-}
+import { getProductById } from "@/lib/mockProducts"
 
 export default function ProductPage() {
   const params = useParams()
@@ -34,9 +19,25 @@ export default function ProductPage() {
   const [isFavorite, setIsFavorite] = useState(false)
 
   useEffect(() => {
-    const details = getProductDetails(productId)
-    setProduct(details)
-  }, [productId])
+    const foundProduct = getProductById(productId)
+    if (foundProduct) {
+      setProduct({
+        id: foundProduct.id,
+        nomeProduto: foundProduct.name,
+        marca: foundProduct.marca || "Original",
+        imagemReal: foundProduct.image,
+        imagemIlustrativa: null,
+        preco: foundProduct.price,
+        estoque: foundProduct.estoque || 10,
+        codigoReferencia: foundProduct.codigoReferencia || "N/A",
+        dimensoes: foundProduct.dimensoes || "N/A",
+        informacoesComplementares: foundProduct.informacoesComplementares || "Produto de alta qualidade.",
+      })
+    } else {
+      // Produto não encontrado, redirecionar para home
+      router.push('/home')
+    }
+  }, [productId, router])
 
   if (!product) {
     return (
@@ -86,8 +87,9 @@ export default function ProductPage() {
             src={productImage || "/placeholder.svg"}
             alt={product.nomeProduto}
             fill
-            className="object-contain p-4 sm:p-6"
+            className="object-cover"
             unoptimized
+            quality={100}
           />
         </div>
       </div>

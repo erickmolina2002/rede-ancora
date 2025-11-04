@@ -1,10 +1,10 @@
 'use client'
 
 import React from 'react'
-import { useCart } from '../../contexts/CartContext'
+import { useProductsBudget } from '../../contexts/ProductsBudgetContext'
 
 export default function CartHeader() {
-  const { getTotalItems } = useCart()
+  const { getTotalItems } = useProductsBudget()
   const totalItems = getTotalItems()
 
   if (totalItems === 0) {

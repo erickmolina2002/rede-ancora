@@ -44,7 +44,7 @@ function BudgetPageContent() {
   })
 
   const handleClose = () => {
-    router.push('/')
+    router.push('/home')
   }
 
   const handleBack = () => {
@@ -58,13 +58,13 @@ function BudgetPageContent() {
   const handleSkip = () => {
     // Skip WhatsApp and go to completion
     console.log('Orçamento finalizado sem WhatsApp:', stepData)
-    router.push('/')
+    router.push('/home')
   }
 
   const handleFinish = () => {
     // Complete the budget process
     console.log('Orçamento finalizado e enviado:', stepData)
-    router.push('/')
+    router.push('/home')
   }
 
   // Automatically populate budgetServices step with products

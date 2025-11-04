@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { ProductCard } from "@/components/product-card"
 import { BottomNav } from "@/components/bottom-nav"
 import Link from "next/link"
-import { apiService, MOCK_PRODUCTS, type Produto } from "@/lib/api"
+import { getFeaturedProducts, getRecentProducts, searchProducts } from "@/lib/mockProducts"
 
 const categories = [
   { id: "injecao", name: "Injeção", icon: Zap },
@@ -21,45 +21,28 @@ const categories = [
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [cartCount] = useState(3)
-  const [featuredProducts, setFeaturedProducts] = useState<Produto[]>([])
-  const [recentProducts, setRecentProducts] = useState<Produto[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    loadProducts()
-  }, [])
+  const [featuredProducts, setFeaturedProducts] = useState(getFeaturedProducts(2))
+  const [recentProducts, setRecentProducts] = useState(getRecentProducts(6))
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     if (searchQuery.length >= 3) {
       const timer = setTimeout(() => {
-        loadProducts(searchQuery)
+        filterProducts(searchQuery)
       }, 500)
       return () => clearTimeout(timer)
     } else if (searchQuery.length === 0) {
-      loadProducts()
+      setFeaturedProducts(getFeaturedProducts(2))
+      setRecentProducts(getRecentProducts(6))
     }
   }, [searchQuery])
 
-  const loadProducts = async (query?: string) => {
+  const filterProducts = (query: string) => {
     setIsLoading(true)
-    try {
-      const response = await apiService.buscarProdutos(query || "FILTRO", 0, 20)
-      const products = response.pageResult?.data || []
-
-      if (products.length === 0) {
-        setFeaturedProducts(MOCK_PRODUCTS.slice(0, 2))
-        setRecentProducts(MOCK_PRODUCTS.slice(2, 8))
-      } else {
-        setFeaturedProducts(products.slice(0, 2))
-        setRecentProducts(products.slice(2, 8))
-      }
-    } catch (error) {
-      console.error("[v0] Error loading products:", error)
-      setFeaturedProducts(MOCK_PRODUCTS.slice(0, 2))
-      setRecentProducts(MOCK_PRODUCTS.slice(2, 8))
-    } finally {
-      setIsLoading(false)
-    }
+    const filtered = searchProducts(query)
+    setFeaturedProducts(filtered.slice(0, 2))
+    setRecentProducts(filtered.slice(2, 8))
+    setIsLoading(false)
   }
 
   return (

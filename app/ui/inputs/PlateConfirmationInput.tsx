@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useVehicle } from '../../contexts/VehicleContext'
-import { getVehicleByPlate } from '../../services/mockData'
+import { apiService } from '../../services/apiService'
 
 type PlateConfirmationInputProps = {
   value: string
@@ -25,33 +25,61 @@ export default function PlateConfirmationInput({
 }: PlateConfirmationInputProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const { vehicleInfo, setVehicleInfo } = useVehicle()
 
-  // Initialize with plate from previous step and load vehicle info randomly
+  // Função para buscar informações do veículo da API
+  const fetchVehicleInfo = async (plate: string) => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      // Remover caracteres especiais da placa
+      const placaLimpa = plate.replace(/[^A-Z0-9]/gi, '').toUpperCase()
+
+      const response = await apiService.buscarInformacaoVeiculo(placaLimpa)
+
+      // Verificar se vehicle está em pageResult ou diretamente no response
+      const vehicle = response?.pageResult?.vehicle || response?.vehicle
+
+      if (vehicle) {
+        setVehicleInfo({
+          placa: plate.toUpperCase(),
+          montadora: vehicle.montadora,
+          modelo: vehicle.modelo,
+          versao: vehicle.versao || '',
+          chassi: vehicle.chassi,
+          motor: vehicle.motor,
+          combustivel: vehicle.combustivel,
+          cambio: vehicle.cambio,
+          carroceria: vehicle.carroceria,
+          anoFabricacao: vehicle.anoFabricacao,
+          anoModelo: vehicle.anoModelo,
+          linha: vehicle.linha,
+          eixos: vehicle.eixos || '',
+          geracao: vehicle.geracao
+        })
+      } else {
+        setError('Não foi possível encontrar informações para esta placa.')
+      }
+    } catch (err) {
+      setError('Erro ao buscar informações do veículo. Tente novamente.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Initialize with plate from previous step and load vehicle info from API
   useEffect(() => {
     if (!value && stepData.budgetDescription) {
       const plateValue = String(stepData.budgetDescription)
       onChange(plateValue)
-
-      // Carregar veículo aleatório
-      console.log('[PLATE CONFIRMATION] Carregando veículo aleatório para placa:', plateValue)
-      const randomVehicle = getVehicleByPlate(plateValue)
-      setVehicleInfo({
-        placa: plateValue.toUpperCase(),
-        ...randomVehicle
-      })
-      console.log('[PLATE CONFIRMATION] Veículo carregado:', randomVehicle.montadora, randomVehicle.modelo)
+      fetchVehicleInfo(plateValue)
     } else if (value && !vehicleInfo) {
-      // Se já tem placa mas não tem info do veículo, carregar aleatório
-      console.log('[PLATE CONFIRMATION] Carregando veículo aleatório para placa existente:', value)
-      const randomVehicle = getVehicleByPlate(value)
-      setVehicleInfo({
-        placa: value.toUpperCase(),
-        ...randomVehicle
-      })
-      console.log('[PLATE CONFIRMATION] Veículo carregado:', randomVehicle.montadora, randomVehicle.modelo)
+      fetchVehicleInfo(value)
     }
-  }, [value, stepData.budgetDescription, onChange, vehicleInfo, setVehicleInfo])
+  }, [value, stepData.budgetDescription, onChange, vehicleInfo])
 
   const handleEdit = () => {
     setIsEditing(true)
@@ -63,20 +91,15 @@ export default function PlateConfirmationInput({
     setEditValue('')
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (editValue.trim()) {
-      // Carregar veículo aleatório ao editar
-      console.log('[PLATE CONFIRMATION] Salvando com novo veículo aleatório')
-      const randomVehicle = getVehicleByPlate(editValue.trim())
-      setVehicleInfo({
-        placa: editValue.trim().toUpperCase(),
-        ...randomVehicle
-      })
-      console.log('[PLATE CONFIRMATION] Novo veículo carregado:', randomVehicle.montadora, randomVehicle.modelo)
-
-      onChange(editValue.trim().toUpperCase())
+      const newPlate = editValue.trim().toUpperCase()
+      onChange(newPlate)
       setIsEditing(false)
       setEditValue('')
+
+      // Buscar informações do veículo da API para a nova placa
+      await fetchVehicleInfo(newPlate)
     }
   }
 
@@ -152,14 +175,44 @@ export default function PlateConfirmationInput({
           )}
         </div>
 
+        {/* Loading State */}
+        {isLoading && !isEditing && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 animate-in fade-in duration-300">
+            <div className="flex items-center gap-3 justify-center">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              <span className="text-[14px] text-[#242424]">Buscando informações do veículo...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !isEditing && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 animate-in fade-in duration-300">
+            <div className="flex items-center gap-3">
+              <svg className="w-6 h-6 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p className="text-[14px] font-medium text-red-900">{error}</p>
+                <button
+                  onClick={() => value && fetchVehicleInfo(value)}
+                  className="text-[12px] text-red-600 hover:text-red-700 underline mt-1"
+                >
+                  Tentar novamente
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Vehicle Information Display */}
-        {vehicleInfo && !isEditing && (
+        {vehicleInfo && !isEditing && !isLoading && !error && (
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 animate-in slide-in-from-bottom duration-300">
             <div className="flex items-center gap-3 mb-2 pl-[4px] pt-[2px]">
               <img src="/images/image.png" alt="Vehicle Info" className="w-7 h-7" />
               <h4 className="text-[16px] font-semibold text-[#242424]">Informações Encontradas</h4>
             </div>
-            
+
             <div className="bg-white rounded-lg p-3 border border-blue-100">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
@@ -168,12 +221,36 @@ export default function PlateConfirmationInput({
                     {vehicleInfo.montadora} {vehicleInfo.modelo}
                   </span>
                 </div>
+                {vehicleInfo.versao && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-[14px] text-[#6B7280]">Versão</span>
+                    <span className="text-[14px] font-medium text-[#242424]">
+                      {vehicleInfo.versao}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center">
                   <span className="text-[14px] text-[#6B7280]">Ano Fabricação</span>
                   <span className="text-[14px] font-medium text-[#242424]">
                     {vehicleInfo.anoFabricacao}
                   </span>
                 </div>
+                {vehicleInfo.motor && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-[14px] text-[#6B7280]">Motor</span>
+                    <span className="text-[14px] font-medium text-[#242424]">
+                      {vehicleInfo.motor}
+                    </span>
+                  </div>
+                )}
+                {vehicleInfo.combustivel && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-[14px] text-[#6B7280]">Combustível</span>
+                    <span className="text-[14px] font-medium text-[#242424]">
+                      {vehicleInfo.combustivel}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center">
                   <span className="text-[14px] text-[#6B7280]">Câmbio</span>
                   <span className="text-[14px] font-medium text-[#242424]">

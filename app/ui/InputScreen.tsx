@@ -135,7 +135,7 @@ export default function InputScreen({
           showBackButton={showBackButton}
         />
 
-        <div className="flex-1 px-6 py-8">
+        <div className="flex-1 px-6 pt-8">
           <div className="space-y-6">
             <div className="text-left space-y-2">
               <h1 className="text-[32px] text-[#1E2124] leading-[38px]">{title}</h1>

@@ -6,6 +6,34 @@ export interface AuthResponse {
   token_type: string
 }
 
+export interface Familia {
+  id: number
+  descricao: string
+  subFamilia: {
+    id: number
+    descricao: string
+    produtoTipo: string | null
+  }
+}
+
+export interface Similar {
+  id: number
+  marcaId: number
+  marca: string
+  logoMarca: string
+  codigoReferencia: string
+  cna: string
+  ean: string | null
+  confiavel: boolean
+  cnl: string
+  linkExibicaoVideo: string | null
+  linkExibicaoVideoEmbed: string
+  informacoesAdicionais: string
+  informacoesComplementares: string | null
+  descontinuado: boolean
+  imagemReal: string
+}
+
 export interface ProdutoFilho {
   id: number
   produtoSistemaId: number | null
@@ -24,11 +52,33 @@ export interface ProdutoFilho {
   dimensoes: string | null
   imagemReal: string | null
   imagemIlustrativa: string | null
+  familia?: Familia
+  imagensTecnicas: string[]
+  produtosParcialmenteSimilares: any[]
+  similares: Similar[]
+}
+
+export interface VehicleInfo {
+  montadora: string
+  modelo: string
+  versao: string
+  chassi: string
+  motor: string
+  combustivel: string
+  cambio: string
+  carroceria: string
+  anoFabricacao: string
+  anoModelo: string
+  linha: string
+  eixos: string
+  geracao: string
+  vehiclePlateLanguageUnderstand?: string
 }
 
 export interface ProdutoFilhoResponse {
   pageResult: {
     count: number
+    vehicle?: VehicleInfo
     data: Array<{
       score: number
       data: ProdutoFilho
@@ -87,18 +137,34 @@ export interface SearchV2Response {
   }
 }
 
-// Helper function to get product image URL
 export function getProductImageUrl(product: Produto | ProdutoFilho): string {
-  // Try imagemReal first, then imagemIlustrativa, then placeholder
-  if (product.imagemReal) {
-    return product.imagemReal
+  const imagePath = product.imagemReal || product.imagemIlustrativa
+
+  if (!imagePath || imagePath.trim() === '') {
+    return '/placeholder.svg?height=400&width=400'
   }
-  if (product.imagemIlustrativa) {
-    return product.imagemIlustrativa
+
+  // Se já for uma URL completa (http/https), extrair o nome do arquivo e usar a versão local
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    try {
+      const url = new URL(imagePath)
+      const filename = url.pathname.split('/').pop()
+      if (filename) {
+        return `/images/produtos/${filename}`
+      }
+    } catch (e) {
+      return imagePath
+    }
+    return imagePath
   }
-  // Return placeholder with product name as query
-  const query = encodeURIComponent(product.nomeProduto || "auto part")
-  return `/placeholder.svg?height=200&width=200&query=${query}`
+
+  // Se começar com /, é um caminho local - usar diretamente
+  if (imagePath.startsWith('/')) {
+    return imagePath
+  }
+
+  // Caso contrário, é um nome de arquivo - usar a pasta local
+  return `/images/produtos/${imagePath}`
 }
 
 class ApiService {
@@ -162,22 +228,30 @@ class ApiService {
     return response.json()
   }
 
-  async buscarProdutosFilho(placa: string, nomeFabricante?: string): Promise<ProdutoFilhoResponse> {
+  async buscarProdutosFilho(
+    placa: string,
+    superbusca?: string,
+    pagina = 1,
+    itensPorPagina = 5
+  ): Promise<ProdutoFilhoResponse> {
     const body: Record<string, any> = {
       veiculoFiltro: {
         veiculoPlaca: placa,
       },
-      pagina: 0,
-      itensPorPagina: 100,
+      pagina,
+      itensPorPagina,
     }
 
-    if (nomeFabricante) {
-      body.produtoFiltro = {
-        nomeFabricante,
-      }
+    if (superbusca) {
+      body.superbusca = superbusca
     }
 
     return this.makeRequest<ProdutoFilhoResponse>("/superbusca/api/integracao/catalogo/v2/produtos-filhos/query", body)
+  }
+
+  // Busca inicial ao colocar a placa - sem filtro, página 0
+  async buscarInformacaoVeiculo(placa: string): Promise<ProdutoFilhoResponse> {
+    return this.buscarProdutosFilho(placa, undefined, 0, 0)
   }
 
   async buscarProdutosV2(

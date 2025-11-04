@@ -12,79 +12,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Slider } from "@/components/ui/slider"
-
-const allProducts = [
-  {
-    id: 1,
-    name: "Flange Conexão Com Tampa Mangueira Radiador Freemont Journey",
-    image: "/images/flange-conexao-mangueira-radiador-freemont-journey.jpg",
-    price: 134.92,
-    originalPrice: 183.16,
-    discount: 26,
-    inStock: true,
-    category: "motores",
-  },
-  {
-    id: 2,
-    name: "Par Encolhedor De Mola Traseira E Dianteira Universal Ref.",
-    image: "/images/par-encolhedor-mola-traseira-dianteira-universal.jpg",
-    price: 574.92,
-    originalPrice: 749.92,
-    discount: 23,
-    inStock: true,
-    category: "abrantes",
-  },
-  {
-    id: 3,
-    name: "Kit Limpador Para-brisa C/ Reservatório Fiesta Hatch/Sedan 1.0",
-    image: "/images/kit-limpador-parabrisa-reservatorio-fiesta.jpg",
-    price: 138.54,
-    inStock: true,
-    category: "abrantes",
-  },
-  {
-    id: 4,
-    name: "Jogo Pastilha Freio Dianteiro Fiesta Hatch/Sedan 1.0",
-    image: "/images/jogo-pastilha-freio-dianteiro-fiesta.jpg",
-    price: 87.85,
-    inStock: true,
-    category: "abrantes",
-  },
-  {
-    id: 5,
-    name: "Mangueira Inferior Radiador Fiesta 1.0 1.6 8v 16v",
-    image: "/images/mangueira-inferior-radiador-fiesta.jpg",
-    price: 156.3,
-    inStock: true,
-    category: "motores",
-  },
-  {
-    id: 6,
-    name: "Bomba D'água Fiesta 1.0 Zetec Rocam",
-    image: "/images/bomba-agua-fiesta-zetec-rocam.jpg",
-    price: 134.47,
-    inStock: true,
-    category: "motores",
-  },
-  {
-    id: 7,
-    name: "Filtro De Óleo Lubrificante Fiesta 1.0 1.6",
-    image: "/images/filtro-oleo-fiesta.jpg",
-    price: 34.87,
-    inStock: true,
-    category: "combustivel",
-  },
-  {
-    id: 8,
-    name: "Vela De Ignição Fiesta 1.0 1.6 Zetec Rocam",
-    image: "/images/vela-ignicao-fiesta.jpg",
-    price: 110.85,
-    inStock: true,
-    category: "injecao",
-  },
-]
-
-
+import { MOCK_PRODUCTS } from "@/lib/mockProducts"
 
 function CatalogContent() {
   const searchParams = useSearchParams()
@@ -95,9 +23,9 @@ function CatalogContent() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(categoryParam ? [categoryParam] : [])
   const [inStockOnly, setInStockOnly] = useState(false)
 
-  const filteredProducts = allProducts.filter((product) => {
+  const filteredProducts = MOCK_PRODUCTS.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(product.category)
+    const matchesCategory = selectedCategories.length === 0 || !product.category || selectedCategories.includes(product.category)
     const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1]
     const matchesStock = !inStockOnly || product.inStock
     return matchesSearch && matchesCategory && matchesPrice && matchesStock

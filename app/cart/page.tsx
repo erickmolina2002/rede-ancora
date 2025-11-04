@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
+import { MOCK_PRODUCTS } from "@/lib/mockProducts"
 
 interface CartItem {
   id: number
@@ -20,30 +21,31 @@ interface CartItem {
 
 export default function CartPage() {
   const router = useRouter()
+  // Initialize cart with 3 random products from mocks
   const [cartItems, setCartItems] = useState<CartItem[]>([
     {
-      id: 1,
-      name: "Flange Conexão Com Tampa Mangueira Radiador Freemont Journey",
-      image: "/placeholder.svg?height=200&width=200",
-      price: 134.92,
+      id: MOCK_PRODUCTS[0].id,
+      name: MOCK_PRODUCTS[0].name,
+      image: MOCK_PRODUCTS[0].image,
+      price: MOCK_PRODUCTS[0].price,
       quantity: 2,
-      inStock: true,
+      inStock: MOCK_PRODUCTS[0].inStock,
     },
     {
-      id: 2,
-      name: "Par Encolhedor De Mola Traseira E Dianteira Universal Ref.",
-      image: "/placeholder.svg?height=200&width=200",
-      price: 574.92,
+      id: MOCK_PRODUCTS[1].id,
+      name: MOCK_PRODUCTS[1].name,
+      image: MOCK_PRODUCTS[1].image,
+      price: MOCK_PRODUCTS[1].price,
       quantity: 1,
-      inStock: true,
+      inStock: MOCK_PRODUCTS[1].inStock,
     },
     {
-      id: 3,
-      name: "Kit Limpador Para-brisa C/ Reservatório Fiesta Hatch/Sedan 1.0",
-      image: "/placeholder.svg?height=150&width=150",
-      price: 138.54,
+      id: MOCK_PRODUCTS[2].id,
+      name: MOCK_PRODUCTS[2].name,
+      image: MOCK_PRODUCTS[2].image,
+      price: MOCK_PRODUCTS[2].price,
       quantity: 1,
-      inStock: true,
+      inStock: MOCK_PRODUCTS[2].inStock,
     },
   ])
 
@@ -122,7 +124,14 @@ export default function CartPage() {
           <div key={item.id} className="bg-white rounded-xl border border-border p-3 sm:p-4 animate-slide-up">
             <div className="flex gap-3">
               <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 bg-muted rounded-lg overflow-hidden">
-                <Image src={item.image || "/placeholder.svg"} alt={item.name} fill className="object-contain p-2" />
+                <Image
+                  src={item.image || "/placeholder.svg"}
+                  alt={item.name}
+                  fill
+                  className="object-cover"
+                  unoptimized
+                  quality={100}
+                />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-xs sm:text-sm font-semibold text-foreground line-clamp-2 leading-tight mb-2">

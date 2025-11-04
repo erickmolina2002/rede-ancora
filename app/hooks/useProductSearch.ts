@@ -36,16 +36,16 @@ export function useProductSearch() {
     hasSearched: false
   })
 
-  // Função para buscar informações do veículo direto do mock
+  // Função para buscar informações do veículo da API
   const buscarInformacoesVeiculo = useCallback(async (placa: string) => {
-    console.log('[BUSCA VEICULO] Buscando informacoes para placa:', placa)
-
     try {
-      // Busca direta no mock - sempre retorna dados
-      const response = await apiService.buscarProdutosV2(placa, 'filtro', 0, 1)
+      // Remover caracteres especiais da placa
+      const placaLimpa = placa.replace(/[^A-Z0-9]/gi, '').toUpperCase()
+
+      // Busca inicial na API
+      const response = await apiService.buscarInformacaoVeiculo(placaLimpa)
 
       if (response?.pageResult?.vehicle) {
-        console.log('[BUSCA VEICULO] Informacoes do veiculo carregadas')
         setState(prev => ({
           ...prev,
           veiculoInfo: response.pageResult.vehicle
@@ -53,7 +53,7 @@ export function useProductSearch() {
         return response.pageResult.vehicle
       }
     } catch (error) {
-      console.log('[BUSCA VEICULO] Erro ao buscar:', error)
+      // Silently fail
     }
 
     return null
@@ -63,17 +63,29 @@ export function useProductSearch() {
   const buscarProdutosFilho = useCallback(async (placa: string) => {
     if (!placa.trim()) return
 
+    setState(prev => ({ ...prev, isLoading: true, error: null }))
+
     try {
-      // Buscar produtos filhos do mock - sem loading state
-      const response = await apiService.buscarProdutosFilho(placa)
+      // Remover caracteres especiais da placa (deixar apenas letras e números)
+      const placaLimpa = placa.replace(/[^A-Z0-9]/gi, '').toUpperCase()
+
+      // Buscar produtos filhos da API - página 1, 100 itens
+      const response = await apiService.buscarProdutosFilho(placaLimpa, undefined, 1, 100)
 
       const produtosFilho = response.pageResult.data.map(item => item.data)
+
+      // Extrair apenas os nomes únicos dos produtos
       const nomesProdutos = [...new Set(
         produtosFilho.map(produto => produto.nomeProduto.trim())
-      )].filter(nome => nome.length > 0)
+      )].filter(nome => nome.length > 0).sort()
 
-      // Buscar informações do veículo direto do mock
-      await buscarInformacoesVeiculo(placa)
+      // Buscar informações do veículo da API (se ainda não tiver)
+      if (!state.veiculoInfo && response.pageResult.vehicle) {
+        setState(prev => ({
+          ...prev,
+          veiculoInfo: response.pageResult.vehicle || null
+        }))
+      }
 
       setState(prev => ({
         ...prev,
@@ -84,43 +96,64 @@ export function useProductSearch() {
       }))
 
     } catch (error) {
-      console.error('Erro ao buscar produtos:', error)
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: 'Erro ao buscar produtos.',
+        error: 'Erro ao buscar produtos. Por favor, tente novamente.',
         hasSearched: true
       }))
     }
-  }, [buscarInformacoesVeiculo])
+  }, [state.veiculoInfo])
 
   // Buscar produtos usando Search V2 com superbusca
   const buscarProdutos = useCallback(async (
     placa: string,
     termoBusca: string,
-    pagina: number = 0,
+    pagina: number = 1,
     itensPorPagina: number = 5
   ) => {
     if (!placa.trim() || !termoBusca.trim()) return
 
+    setState(prev => ({ ...prev, isLoading: true, error: null }))
+
     try {
-      // Busca direta no mock - sem loading state
-      const response = await apiService.buscarProdutosV2(placa, termoBusca, pagina, itensPorPagina)
+      // Remover caracteres especiais da placa
+      const placaLimpa = placa.replace(/[^A-Z0-9]/gi, '').toUpperCase()
+
+      // Busca na API real usando produtos-filhos/query
+      const response = await apiService.buscarProdutosFilho(placaLimpa, termoBusca, pagina, itensPorPagina)
+
+      // Converter ProdutoFilho para Produto
+      const produtos: Produto[] = response.pageResult.data.map(item => ({
+        id: item.data.id,
+        dataModificacao: item.data.dataModificacao,
+        csa: item.data.csa,
+        cna: item.data.cna,
+        codigoReferencia: item.data.codigoReferencia,
+        ean: item.data.ean,
+        marca: item.data.marca,
+        nomeProduto: item.data.nomeProduto,
+        informacoesComplementares: item.data.informacoesComplementares,
+        pontoCriticoAtencao: item.data.pontoCriticoAtencao,
+        dimensoes: item.data.dimensoes,
+        imagemReal: item.data.imagemReal,
+        imagemIlustrativa: item.data.imagemIlustrativa,
+        similares: item.data.similares || []
+      }))
 
       setState(prev => ({
         ...prev,
         isLoading: false,
-        produtosEncontrados: response.pageResult.data,
-        veiculoInfo: response.pageResult.vehicle,
+        produtosEncontrados: produtos,
+        veiculoInfo: response.pageResult.vehicle || prev.veiculoInfo,
         hasSearched: true
       }))
 
     } catch (error) {
-      console.error('Erro ao buscar produtos:', error)
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: 'Erro ao buscar produtos.',
+        error: 'Erro ao buscar produtos. Por favor, tente novamente.',
         hasSearched: true
       }))
     }

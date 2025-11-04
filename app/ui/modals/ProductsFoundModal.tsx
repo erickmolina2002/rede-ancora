@@ -49,10 +49,9 @@ export default function ProductsFoundModal({
   const [itemQuantities, setItemQuantities] = useState<{ [key: number]: number }>({})
   const [isAnimating, setIsAnimating] = useState(false)
   const [currentPage, setCurrentPage] = useState(0)
-  const [showSimilares, setShowSimilares] = useState(false)
 
-  const { addItem } = useCart()
-  const { addProduct, updateQuantity, removeProduct } = useProductsBudget()
+  const { addItem, removeItem } = useCart()
+  const { products, addProduct, updateQuantity, removeProduct } = useProductsBudget()
   const { setVehicleInfo } = useVehicle()
   // const router = useRouter()
 
@@ -64,33 +63,39 @@ export default function ProductsFoundModal({
 
   // Produtos similares de todos os produtos encontrados
   const produtosSimilares = useMemo(() => {
-    if (!showSimilares) return []
-    
     const similares: Array<{
       id: number;
       nomeProduto: string;
       marca: string;
+      logoMarca: string;
       codigoReferencia: string;
       imagemReal: string | null;
       informacoesComplementares: string;
     }> = []
-    
+
     produtos.forEach(produto => {
       if (produto.similares && produto.similares.length > 0) {
-        produto.similares.slice(0, 5).forEach(similar => {
+        produto.similares.forEach(similar => {
           similares.push({
             id: similar.id,
-            nomeProduto: `${similar.marca} - Similar`,
+            nomeProduto: produto.nomeProduto,
             marca: similar.marca,
+            logoMarca: similar.logoMarca,
             codigoReferencia: similar.codigoReferencia,
-            imagemReal: null,
+            imagemReal: similar.imagemReal,
             informacoesComplementares: similar.informacoesComplementares || ''
           })
         })
       }
     })
-    return similares.slice(0, 5)
-  }, [produtos, showSimilares])
+
+    // Remover duplicatas baseado no id
+    const uniqueSimilares = Array.from(
+      new Map(similares.map(item => [item.id, item])).values()
+    )
+
+    return uniqueSimilares
+  }, [produtos])
 
   const totalPages = Math.ceil(produtos.length / 6)
 
@@ -130,13 +135,21 @@ export default function ProductsFoundModal({
   }
 
   const handleDecrement = (id: number) => {
-    const newQuantity = Math.max(1, (itemQuantities[id] || 1) - 1)
-    setItemQuantities(prev => ({
-      ...prev,
-      [id]: newQuantity
-    }))
-    // Sync with ProductsBudgetContext
-    updateQuantity(id, newQuantity)
+    const currentQuantity = itemQuantities[id] || 1
+
+    if (currentQuantity === 1) {
+      // Se quantidade é 1, remove o item completamente
+      handleRemove(id)
+    } else {
+      // Caso contrário, apenas decrementa
+      const newQuantity = currentQuantity - 1
+      setItemQuantities(prev => ({
+        ...prev,
+        [id]: newQuantity
+      }))
+      // Sync with ProductsBudgetContext
+      updateQuantity(id, newQuantity)
+    }
   }
 
   const handleRemove = (id: number) => {
@@ -148,16 +161,16 @@ export default function ProductsFoundModal({
       delete newQuantities[id]
       return newQuantities
     })
-    // Sync with ProductsBudgetContext
+    // Sync with both contexts
+    removeItem(id)
     removeProduct(id)
   }
 
   const handleClose = () => {
     setIsAnimating(true)
     setTimeout(() => {
-      setAddedItems([])
+      // Não limpar addedItems e itemQuantities - eles serão sincronizados quando reabrir
       setCurrentPage(0)
-      setShowSimilares(false)
       setIsAnimating(false)
       onClose()
     }, 200)
@@ -185,12 +198,24 @@ export default function ProductsFoundModal({
     }
   }, [isOpen, veiculoInfo, placa, setVehicleInfo])
 
-  // Reset when modal opens
+  // Sync state with ProductsBudgetContext whenever products change or modal opens
+  React.useEffect(() => {
+    // Sincronizar com os produtos já adicionados no contexto
+    const idsAdicionados = products.map(p => p.id.toString())
+    setAddedItems(idsAdicionados)
+
+    // Sincronizar quantidades
+    const quantities: { [key: number]: number } = {}
+    products.forEach(p => {
+      quantities[p.id] = p.quantity
+    })
+    setItemQuantities(quantities)
+  }, [products])
+
+  // Reset pagination when modal opens
   React.useEffect(() => {
     if (isOpen) {
-      setAddedItems([])
       setCurrentPage(0)
-      setShowSimilares(false)
       setIsAnimating(false)
     }
   }, [isOpen])
@@ -254,18 +279,10 @@ export default function ProductsFoundModal({
           {/* Products */}
           {!isLoading && !error && produtosPaginados.length > 0 && (
             <div className="pb-4">
-              <div className="flex items-center justify-between mb-4">
+              <div className="mb-4">
                 <h3 className="text-[16px] font-medium text-[#242424]">
                   Produtos Encontrados ({produtos.length})
                 </h3>
-                {produtosSimilares.length > 0 && (
-                  <button
-                    onClick={() => setShowSimilares(!showSimilares)}
-                    className="text-[#059669] text-sm hover:text-[#047857] px-2 py-1 rounded hover:bg-[#F0FDF4] transition-all"
-                  >
-                    {showSimilares ? 'Ocultar' : 'Ver'} Similares ({produtosSimilares.length})
-                  </button>
-                )}
               </div>
 
               <div className="space-y-3">
@@ -280,7 +297,10 @@ export default function ProductsFoundModal({
                       }}
                     >
                       <ProductCard
-                        produto={produto}
+                        produto={{
+                          ...produto,
+                          tipoCompatibilidade: 'original'
+                        }}
                         onAdd={handleItemToggle}
                         onIncrement={handleIncrement}
                         onDecrement={handleDecrement}
@@ -288,17 +308,16 @@ export default function ProductsFoundModal({
                         isAdded={isAdded}
                         quantity={itemQuantities[produto.id] || 1}
                       />
-
                     </div>
                   )
                 })}
               </div>
 
               {/* Produtos Similares */}
-              {showSimilares && produtosSimilares.length > 0 && (
+              {produtosSimilares.length > 0 && (
                 <div className="mt-6">
                   <h4 className="text-[14px] font-medium text-[#6B7280] mb-3">
-                    Produtos Similares
+                    Produtos Similares ({produtosSimilares.length})
                   </h4>
                   <div className="space-y-3">
                     {produtosSimilares.map((similar, index) => {
@@ -326,7 +345,8 @@ export default function ProductsFoundModal({
                               dimensoes: null,
                               imagemReal: similar.imagemReal,
                               imagemIlustrativa: null,
-                              similares: []
+                              similares: [],
+                              tipoCompatibilidade: 'compativel'
                             }}
                             onAdd={handleItemToggle}
                             onIncrement={handleIncrement}
@@ -336,7 +356,6 @@ export default function ProductsFoundModal({
                             isAdded={isAdded}
                             quantity={itemQuantities[similar.id] || 1}
                           />
-
                         </div>
                       )
                     })}

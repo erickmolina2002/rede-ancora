@@ -3,27 +3,19 @@ import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ShoppingCart } from "lucide-react"
-import { getProductImageUrl, type Produto } from "@/lib/api"
 
 interface Product {
   id: number
-  nomeProduto: string
-  marca: string
-  imagemReal?: string | null
-  imagemIlustrativa?: string | null
-  preco?: number
-  estoque?: number
-  // Legacy support
-  name?: string
-  image?: string
-  price?: number
+  name: string
+  image: string
+  price: number
   originalPrice?: number
   discount?: number
   inStock?: boolean
 }
 
 interface ProductCardProps {
-  product: Produto & { preco?: number; estoque?: number }
+  product: Product
   featured?: boolean
   compact?: boolean
 }
@@ -36,9 +28,9 @@ export function ProductCard({ product, featured = false, compact = false }: Prod
     }).format(price)
   }
 
-  const productImage = getProductImageUrl(product)
-  const productPrice = product.preco || Math.random() * 200 + 50
-  const productInStock = product.estoque ? product.estoque > 0 : true
+  const productImage = product.image
+  const productPrice = product.price
+  const productInStock = product.inStock !== false
   const productDiscount = product.discount
   const productOriginalPrice = product.originalPrice
 
@@ -46,18 +38,19 @@ export function ProductCard({ product, featured = false, compact = false }: Prod
     return (
       <Link href={`/product/${product.id}`}>
         <div className="bg-white rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all active:scale-95">
-          <div className="aspect-square bg-muted relative">
+          <div className="aspect-square bg-muted relative overflow-hidden">
             <Image
               src={productImage || "/placeholder.svg"}
-              alt={product.nomeProduto}
+              alt={product.name}
               fill
-              className="object-contain p-3"
+              className="object-cover"
               unoptimized
+              quality={100}
             />
           </div>
           <div className="p-3 space-y-2">
             <h3 className="text-xs sm:text-sm font-medium text-foreground line-clamp-2 leading-tight min-h-[2.5rem]">
-              {product.nomeProduto}
+              {product.name}
             </h3>
             <div className="flex items-center justify-between">
               <div>
@@ -81,10 +74,11 @@ export function ProductCard({ product, featured = false, compact = false }: Prod
             <div className="relative w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 bg-muted rounded-xl overflow-hidden">
               <Image
                 src={productImage || "/placeholder.svg"}
-                alt={product.nomeProduto}
+                alt={product.name}
                 fill
-                className="object-contain p-2"
+                className="object-cover"
                 unoptimized
+                quality={100}
               />
               {productDiscount && (
                 <Badge className="absolute top-2 left-2 bg-ancora-red text-white border-0 font-bold text-xs">
@@ -95,7 +89,7 @@ export function ProductCard({ product, featured = false, compact = false }: Prod
             <div className="flex-1 flex flex-col justify-between min-w-0">
               <div>
                 <h3 className="text-xs sm:text-sm font-semibold text-foreground line-clamp-3 leading-tight mb-2">
-                  {product.nomeProduto}
+                  {product.name}
                 </h3>
                 {productInStock && (
                   <Badge

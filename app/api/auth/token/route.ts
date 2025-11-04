@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 
-const SSO_URL = "https://sso-catalogo.redeancora.com.br"
-const CLIENT_ID = "65tvh6rvn4d7uer3hqqm2p8k2pvnm5wx"
-const CLIENT_SECRET = "9Gt2dBRFTUgunSeRPqEFxwNgAfjNUPLP5EBvXKCn"
+const SSO_URL = process.env.ANCORA_SSO_URL || "https://sso-catalogo.redeancora.com.br/connect/token"
+const CLIENT_ID = process.env.ANCORA_CLIENT_ID
+const CLIENT_SECRET = process.env.ANCORA_CLIENT_SECRET
 
 export async function POST() {
   try {
@@ -14,7 +14,7 @@ export async function POST() {
     const formData = new URLSearchParams()
     formData.append("grant_type", "client_credentials")
 
-    const response = await fetch(`${SSO_URL}/connect/token`, {
+    const response = await fetch(SSO_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -37,7 +37,7 @@ export async function POST() {
       formDataWithCreds.append("client_secret", CLIENT_SECRET)
       formDataWithCreds.append("grant_type", "client_credentials")
 
-      const response2 = await fetch(`${SSO_URL}/connect/token`, {
+      const response2 = await fetch(SSO_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",

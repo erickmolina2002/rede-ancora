@@ -46,18 +46,27 @@ export default function EnhancedProductsList({
   const getImageUrl = (imagePath: string | null) => {
     if (!imagePath || imagePath.trim() === '') return null
 
-    // Se já for uma URL completa (http/https), usar como está
+    // Se já for uma URL completa (http/https), extrair o nome do arquivo e usar a versão local
     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      try {
+        const url = new URL(imagePath)
+        const filename = url.pathname.split('/').pop()
+        if (filename) {
+          return `/images/produtos/${filename}`
+        }
+      } catch (e) {
+        return imagePath
+      }
       return imagePath
     }
 
-    // Se começar com /, é um caminho local (mock) - usar diretamente
+    // Se começar com /, é um caminho local - usar diretamente
     if (imagePath.startsWith('/')) {
       return imagePath
     }
 
-    // Caso contrário, é um nome de arquivo do blob storage
-    return `https://catalogopdtstorage.blob.core.windows.net/imagens-stg-v2/produto/${imagePath}`
+    // Caso contrário, é um nome de arquivo - usar a pasta local
+    return `/images/produtos/${imagePath}`
   }
 
   const handleImageError = (productId: number) => {
@@ -82,7 +91,7 @@ export default function EnhancedProductsList({
 
   return (
     <div className="mt-6 space-y-4">
-      <div className="text-[14px] text-[#6B7280] mb-4">
+      <div className="text-[14px] text-[#6B7280] mb-2">
         {products.length} {products.length === 1 ? 'produto selecionado' : 'produtos selecionados'}
       </div>
       

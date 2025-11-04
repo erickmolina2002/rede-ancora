@@ -16,19 +16,21 @@ function BudgetPageContent() {
   const searchParams = useSearchParams()
   const initialStep = parseInt(searchParams.get('step') || '0')
   
-  const { products, getTotalItems } = useProductsBudget()
+  const { products, getTotalItems, clearProducts } = useProductsBudget()
   const { setVehicleInfo, clearVehicleInfo } = useVehicle()
   const { buscarInformacoesVeiculo } = useProductSearch()
   
   const {
     currentStep,
+    currentStepIndex,
     currentValue,
     isValid,
     canGoBack,
     updateCurrentStepData,
     nextStep,
     prevStep,
-    stepData
+    stepData,
+    clearStepData
   } = useStepFlow({
     steps: budgetSteps,
     initialStepIndex: initialStep,
@@ -48,6 +50,27 @@ function BudgetPageContent() {
   }
 
   const handleBack = () => {
+    // Se estiver voltando para o step de nome (início), limpar tudo
+    const previousStepIndex = currentStepIndex - 1
+    const previousStep = budgetSteps[previousStepIndex]
+
+    if (previousStep?.id === 'budgetName') {
+      // Voltando para o início, limpar tudo
+      clearVehicleInfo()
+      clearProducts()
+      // Limpar todos os steps de dados
+      clearStepData('budgetDescription')
+      clearStepData('budgetPlateConfirmation')
+      clearStepData('budgetServices')
+      clearStepData('budgetValue')
+      clearStepData('budgetConfirmation')
+    } else if (currentStep?.id === 'budgetPlateConfirmation') {
+      // Se estiver voltando do step de confirmação de placa, limpar o veículo e dados relacionados
+      clearVehicleInfo()
+      clearProducts() // Limpar produtos do orçamento
+      clearStepData('budgetPlateConfirmation')
+      clearStepData('budgetDescription')
+    }
     prevStep()
   }
 
@@ -120,12 +143,34 @@ function BudgetPageContent() {
     }
   }, [currentStep?.id, currentValue, stepData.budgetDescription, updateCurrentStepData])
 
-  // Clear vehicle info when starting a new budget
+  // Clear vehicle info and products when starting a new budget
   useEffect(() => {
     if (currentStep?.id === 'budgetName') {
       clearVehicleInfo()
+      clearProducts()
     }
-  }, [currentStep?.id, clearVehicleInfo])
+  }, [currentStep?.id, clearVehicleInfo, clearProducts])
+
+  // Clear vehicle info and products when going back to plate input
+  useEffect(() => {
+    if (currentStep?.id === 'budgetDescription') {
+      clearVehicleInfo()
+      clearProducts()
+    }
+  }, [currentStep?.id, clearVehicleInfo, clearProducts])
+
+  // Detectar mudança de placa e limpar dados relacionados
+  const [lastPlate, setLastPlate] = React.useState<string | null>(null)
+  useEffect(() => {
+    if (currentStep?.id === 'budgetDescription' && currentValue && currentValue !== lastPlate) {
+      // Placa mudou, limpar produtos e veículo
+      if (lastPlate !== null) {
+        clearVehicleInfo()
+        clearProducts()
+      }
+      setLastPlate(currentValue)
+    }
+  }, [currentStep?.id, currentValue, lastPlate, clearVehicleInfo, clearProducts])
 
   if (!currentStep) {
     return <div>Carregando...</div>

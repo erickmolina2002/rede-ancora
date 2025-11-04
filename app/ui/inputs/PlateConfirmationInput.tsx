@@ -81,6 +81,14 @@ export default function PlateConfirmationInput({
     }
   }, [value, stepData.budgetDescription, onChange, vehicleInfo])
 
+  // Clear error when vehicleInfo is cleared (when going back)
+  useEffect(() => {
+    if (!vehicleInfo) {
+      setError(null)
+      setIsLoading(false)
+    }
+  }, [vehicleInfo])
+
   const handleEdit = () => {
     setIsEditing(true)
     setEditValue(value)
@@ -215,54 +223,79 @@ export default function PlateConfirmationInput({
 
             <div className="bg-white rounded-lg p-3 border border-blue-100">
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-[14px] text-[#6B7280]">Marca/Modelo</span>
-                  <span className="text-[14px] font-medium text-[#242424]">
-                    {vehicleInfo.montadora} {vehicleInfo.modelo}
-                  </span>
-                </div>
+                {vehicleInfo.montadora && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-[12px] text-[#6B7280]">Marca</span>
+                    <span className="text-[12px] font-medium text-[#242424]">
+                      {vehicleInfo.montadora}
+                    </span>
+                  </div>
+                )}
+                {vehicleInfo.modelo && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-[12px] text-[#6B7280]">Modelo</span>
+                    <span className="text-[12px] font-medium text-[#242424]">
+                      {vehicleInfo.modelo}
+                    </span>
+                  </div>
+                )}
                 {vehicleInfo.versao && (
                   <div className="flex justify-between items-center">
-                    <span className="text-[14px] text-[#6B7280]">Versão</span>
-                    <span className="text-[14px] font-medium text-[#242424]">
+                    <span className="text-[12px] text-[#6B7280]">Versão</span>
+                    <span className="text-[12px] font-medium text-[#242424]">
                       {vehicleInfo.versao}
                     </span>
                   </div>
                 )}
-                <div className="flex justify-between items-center">
-                  <span className="text-[14px] text-[#6B7280]">Ano Fabricação</span>
-                  <span className="text-[14px] font-medium text-[#242424]">
-                    {vehicleInfo.anoFabricacao}
-                  </span>
-                </div>
+                {vehicleInfo.anoModelo && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-[12px] text-[#6B7280]">Ano Modelo</span>
+                    <span className="text-[12px] font-medium text-[#242424]">
+                      {vehicleInfo.anoModelo}
+                    </span>
+                  </div>
+                )}
                 {vehicleInfo.motor && (
                   <div className="flex justify-between items-center">
-                    <span className="text-[14px] text-[#6B7280]">Motor</span>
-                    <span className="text-[14px] font-medium text-[#242424]">
+                    <span className="text-[12px] text-[#6B7280]">Motor</span>
+                    <span className="text-[12px] font-medium text-[#242424]">
                       {vehicleInfo.motor}
                     </span>
                   </div>
                 )}
                 {vehicleInfo.combustivel && (
                   <div className="flex justify-between items-center">
-                    <span className="text-[14px] text-[#6B7280]">Combustível</span>
-                    <span className="text-[14px] font-medium text-[#242424]">
+                    <span className="text-[12px] text-[#6B7280]">Combustível</span>
+                    <span className="text-[12px] font-medium text-[#242424]">
                       {vehicleInfo.combustivel}
                     </span>
                   </div>
                 )}
-                <div className="flex justify-between items-center">
-                  <span className="text-[14px] text-[#6B7280]">Câmbio</span>
-                  <span className="text-[14px] font-medium text-[#242424]">
-                    {vehicleInfo.cambio}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[14px] text-[#6B7280]">Carroceria</span>
-                  <span className="text-[14px] font-medium text-[#242424]">
-                    {vehicleInfo.carroceria}
-                  </span>
-                </div>
+                {vehicleInfo.cambio && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-[12px] text-[#6B7280]">Câmbio</span>
+                    <span className="text-[12px] font-medium text-[#242424]">
+                      {vehicleInfo.cambio}
+                    </span>
+                  </div>
+                )}
+                {vehicleInfo.carroceria && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-[12px] text-[#6B7280]">Carroceria</span>
+                    <span className="text-[12px] font-medium text-[#242424]">
+                      {vehicleInfo.carroceria}
+                    </span>
+                  </div>
+                )}
+               
+                {vehicleInfo.eixos && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-[12px] text-[#6B7280]">Eixos</span>
+                    <span className="text-[12px] font-medium text-[#242424]">
+                      {vehicleInfo.eixos}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

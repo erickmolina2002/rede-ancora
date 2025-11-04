@@ -101,16 +101,20 @@ export default function WhatsAppSendInput({
       if (stepData.budgetConfirmation) {
         try {
           const confirmationData = JSON.parse(String(stepData.budgetConfirmation))
-          if (confirmationData.editedServicePrice) {
-            // Update budget value with edited service price
-            budgetValue = confirmationData.editedServicePrice.toString()
+          // Usar servicePrice se disponível (pode ser original ou editado)
+          if (confirmationData.servicePrice !== undefined && confirmationData.servicePrice !== null) {
+            // NÃO converter para string, manter como número!
+            budgetValue = confirmationData.servicePrice
+          } else if (confirmationData.editedServicePrice !== undefined && confirmationData.editedServicePrice !== null) {
+            // Fallback para compatibilidade
+            budgetValue = confirmationData.editedServicePrice
           }
           if (confirmationData.deliveryDays) {
             deliveryDays = confirmationData.deliveryDays
           }
         } catch (e) {
           // If parsing fails, use original values
-          console.log('Using original budget values')
+          console.error('Error parsing budget confirmation data:', e)
         }
       }
       
@@ -156,7 +160,17 @@ export default function WhatsAppSendInput({
       
       const partsItems = realProducts.filter(item => item.type === 'parts')
       const serviceItems = realProducts.filter(item => item.type === 'service')
-      const servicePrice = parseFloat(String(budgetValue).replace(/[^\d,]/g, '').replace(',', '.')) || 0
+
+      // Se budgetValue já é um número (do confirmationData.servicePrice), usar direto
+      let servicePrice = 0
+      if (typeof budgetValue === 'number') {
+        servicePrice = budgetValue
+      } else {
+        // Se é string, tentar parsear
+        const budgetStr = String(budgetValue)
+        const cleaned = budgetStr.replace(/[^\d,]/g, '').replace(',', '.')
+        servicePrice = parseFloat(cleaned) || 0
+      }
       
       const formatPrice = (price: number) => {
         return new Intl.NumberFormat('pt-BR', {

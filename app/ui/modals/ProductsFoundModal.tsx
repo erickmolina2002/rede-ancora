@@ -226,9 +226,9 @@ export default function ProductsFoundModal({
     <div className={`fixed inset-0 bg-[#F5F5F5] z-50 transition-opacity duration-200 ${
       isAnimating ? 'animate-out fade-out' : 'animate-in fade-in'
     }`}>
-      <div className={`flex flex-col h-full w-full max-w-[360px] mx-auto transition-transform duration-300 overflow-hidden ${
-        isAnimating 
-          ? 'animate-out slide-out-to-bottom' 
+      <div className={`flex flex-col h-full w-full transition-transform duration-300 overflow-hidden ${
+        isAnimating
+          ? 'animate-out slide-out-to-bottom'
           : 'animate-in slide-in-from-bottom'
       }`}>
         {/* Header */}

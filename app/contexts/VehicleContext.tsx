@@ -32,12 +32,10 @@ export function VehicleProvider({ children }: { children: ReactNode }) {
   const [vehicleInfo, setVehicleInfoState] = useState<VehicleInfo | null>(null)
 
   const setVehicleInfo = (info: VehicleInfo | null) => {
-    console.log('[VEHICLE CONTEXT] setVehicleInfo chamado com:', info)
     setVehicleInfoState(info)
   }
 
   const clearVehicleInfo = () => {
-    console.log('[VEHICLE CONTEXT] clearVehicleInfo chamado')
     setVehicleInfoState(null)
   }
 

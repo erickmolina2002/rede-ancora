@@ -155,11 +155,8 @@ export default function ProductCard({
       )}
 
       {/* Selo de Similar ou Original */}
-      {isSimilar ? (
-        <div className="">
-        </div>
-      ) : (
-        <div className="absolute top-[76px] left-[250px] bg-green-600 text-white text-[10px] rounded font-semibold px-2 py-1 font-medium z-10">
+      {!isSimilar && (
+        <div className="absolute bottom-[10px] right-[10px] bg-green-600 text-white text-[10px] rounded font-semibold px-2 py-1 font-medium z-10">
           ORIGINAL
         </div>
       )}

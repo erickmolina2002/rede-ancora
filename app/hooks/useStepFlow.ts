@@ -81,6 +81,14 @@ export function useStepFlow({ steps, initialData = {}, initialStepIndex = 0, onC
     setStepData(initialData)
   }, [initialData, initialStepIndex])
 
+  const clearStepData = useCallback((stepId: string) => {
+    setStepData(prev => {
+      const newData = { ...prev }
+      delete newData[stepId]
+      return newData
+    })
+  }, [])
+
   const canGoBack = currentStep?.allowBack !== false && !isFirstStep
   const canContinue = validateCurrentStep()
 
@@ -107,6 +115,7 @@ export function useStepFlow({ steps, initialData = {}, initialStepIndex = 0, onC
     prevStep,
     goToStep,
     resetFlow,
+    clearStepData,
 
     // Progress
     progress: ((currentStepIndex + 1) / steps.length) * 100

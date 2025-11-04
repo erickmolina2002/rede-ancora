@@ -54,9 +54,11 @@ export default function SearchModal({
   // Buscar produtos filhos automaticamente quando modal abrir com placa
   useEffect(() => {
     if (isOpen && placa && placa.trim()) {
+      // Resetar busca anterior antes de buscar novos produtos
+      resetSearch()
       buscarProdutosFilho(placa.trim().toUpperCase())
     }
-  }, [isOpen, placa, buscarProdutosFilho])
+  }, [isOpen, placa, buscarProdutosFilho, resetSearch])
 
   // Update VehicleContext when vehicle info is fetched
   useEffect(() => {

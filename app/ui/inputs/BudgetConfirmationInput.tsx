@@ -29,11 +29,6 @@ export default function BudgetConfirmationInput({
   const { products, getTotalAmount } = useProductsBudget()
   const { vehicleInfo } = useVehicle()
 
-  // Debug: log vehicle info
-  useEffect(() => {
-    console.log('BudgetConfirmationInput - vehicleInfo:', vehicleInfo)
-  }, [vehicleInfo])
-
   // Convert products to selected services format
   // const getSelectedServices = () => {
   //   return products.map(product => ({
@@ -55,8 +50,15 @@ export default function BudgetConfirmationInput({
   }
 
   const getCurrentServicePrice = () => {
-    if (isEditingService && editableServicePrice) {
-      const numValue = parseFloat(editableServicePrice.replace(/[^\d,]/g, '').replace(',', '.'))
+    if (editableServicePrice) {
+      // Remover símbolo de moeda e espaços, manter dígitos e vírgula
+      // Exemplo: "R$ 0,03" -> "0,03" -> "0.03" -> 0.03
+      const cleanValue = editableServicePrice
+        .replace(/[R$\s]/g, '')  // Remove R$, espaço: "0,03"
+        .replace('.', '')         // Remove separador de milhar: "0,03"
+        .replace(',', '.')        // Substitui vírgula por ponto: "0.03"
+
+      const numValue = parseFloat(cleanValue)
       return isNaN(numValue) ? 0 : numValue
     }
     return getServicePrice()
@@ -79,10 +81,10 @@ export default function BudgetConfirmationInput({
 
   // Initialize editable service price
   useEffect(() => {
-    if (!editableServicePrice && originalServicePrice > 0) {
+    if (!editableServicePrice && originalServicePrice > 0 && !isEditingService) {
       setEditableServicePrice(formatPrice(originalServicePrice))
     }
-  }, [originalServicePrice, editableServicePrice])
+  }, [originalServicePrice])
 
   const formatCurrencyInput = (value: string) => {
     // Remove non-digits
@@ -105,6 +107,10 @@ export default function BudgetConfirmationInput({
   }
 
   const handleServicePriceEdit = () => {
+    // Inicializar com o valor atual formatado se ainda não tiver
+    if (!editableServicePrice) {
+      setEditableServicePrice(formatPrice(currentServicePrice))
+    }
     setIsEditingService(true)
   }
 
@@ -112,15 +118,23 @@ export default function BudgetConfirmationInput({
     setIsEditingService(false)
   }
 
+  const handleServicePriceCancel = () => {
+    // Restaurar o valor original
+    setEditableServicePrice(formatPrice(originalServicePrice))
+    setIsEditingService(false)
+  }
+
   // Update the form value with confirmation and additional data
   useEffect(() => {
-    const confirmationData = JSON.stringify({
+    const confirmationData = {
       confirmed: true,
-      editedServicePrice: currentServicePrice !== originalServicePrice ? currentServicePrice : null,
+      // Sempre enviar o valor atual (original ou editado)
+      servicePrice: currentServicePrice,
+      editedServicePrice: editableServicePrice ? currentServicePrice : null,
       deliveryDays: deliveryDays || null
-    })
-    onChange(confirmationData)
-  }, [onChange, currentServicePrice, originalServicePrice, deliveryDays])
+    }
+    onChange(JSON.stringify(confirmationData))
+  }, [onChange, currentServicePrice, editableServicePrice, deliveryDays])
 
   return (
     <div className={`w-full ${className}`}>
@@ -143,30 +157,78 @@ export default function BudgetConfirmationInput({
                   {vehicleInfo?.placa || String(stepData.budgetDescription || stepData.budgetPlateConfirmation || 'ABC-1234')}
                 </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[14px] text-[#6B7280]">Marca/Modelo</span>
-                <span className="text-[14px] font-medium text-[#242424]">
-                  {vehicleInfo ? `${vehicleInfo.montadora} ${vehicleInfo.modelo}` : 'Carregando...'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[14px] text-[#6B7280]">Ano Fabricação</span>
-                <span className="text-[14px] font-medium text-[#242424]">
-                  {vehicleInfo?.anoFabricacao || 'Carregando...'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[14px] text-[#6B7280]">Câmbio</span>
-                <span className="text-[14px] font-medium text-[#242424]">
-                  {vehicleInfo?.cambio || 'Carregando...'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[14px] text-[#6B7280]">Carroceria</span>
-                <span className="text-[14px] font-medium text-[#242424]">
-                  {vehicleInfo?.carroceria || 'Carregando...'}
-                </span>
-              </div>
+              {vehicleInfo?.montadora && (
+                <div className="flex justify-between items-center">
+                  <span className="text-[14px] text-[#6B7280]">Marca</span>
+                  <span className="text-[14px] font-medium text-[#242424]">
+                    {vehicleInfo.montadora}
+                  </span>
+                </div>
+              )}
+              {vehicleInfo?.modelo && (
+                <div className="flex justify-between items-center">
+                  <span className="text-[14px] text-[#6B7280]">Modelo</span>
+                  <span className="text-[14px] font-medium text-[#242424]">
+                    {vehicleInfo.modelo}
+                  </span>
+                </div>
+              )}
+              {vehicleInfo?.versao && (
+                <div className="flex justify-between items-center">
+                  <span className="text-[14px] text-[#6B7280]">Versão</span>
+                  <span className="text-[14px] font-medium text-[#242424]">
+                    {vehicleInfo.versao}
+                  </span>
+                </div>
+              )}
+              {vehicleInfo?.anoModelo && (
+                <div className="flex justify-between items-center">
+                  <span className="text-[14px] text-[#6B7280]">Ano Modelo</span>
+                  <span className="text-[14px] font-medium text-[#242424]">
+                    {vehicleInfo.anoModelo}
+                  </span>
+                </div>
+              )}
+              {vehicleInfo?.motor && (
+                <div className="flex justify-between items-center">
+                  <span className="text-[14px] text-[#6B7280]">Motor</span>
+                  <span className="text-[14px] font-medium text-[#242424]">
+                    {vehicleInfo.motor}
+                  </span>
+                </div>
+              )}
+              {vehicleInfo?.combustivel && (
+                <div className="flex justify-between items-center">
+                  <span className="text-[14px] text-[#6B7280]">Combustível</span>
+                  <span className="text-[14px] font-medium text-[#242424]">
+                    {vehicleInfo.combustivel}
+                  </span>
+                </div>
+              )}
+              {vehicleInfo?.cambio && (
+                <div className="flex justify-between items-center">
+                  <span className="text-[14px] text-[#6B7280]">Câmbio</span>
+                  <span className="text-[14px] font-medium text-[#242424]">
+                    {vehicleInfo.cambio}
+                  </span>
+                </div>
+              )}
+              {vehicleInfo?.carroceria && (
+                <div className="flex justify-between items-center">
+                  <span className="text-[14px] text-[#6B7280]">Carroceria</span>
+                  <span className="text-[14px] font-medium text-[#242424]">
+                    {vehicleInfo.carroceria}
+                  </span>
+                </div>
+              )}
+              {vehicleInfo?.eixos && (
+                <div className="flex justify-between items-center">
+                  <span className="text-[14px] text-[#6B7280]">Eixos</span>
+                  <span className="text-[14px] font-medium text-[#242424]">
+                    {vehicleInfo.eixos}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -235,14 +297,21 @@ export default function BudgetConfirmationInput({
                         type="text"
                         value={editableServicePrice}
                         onChange={(e) => handleServicePriceChange(e.target.value)}
-                        className="w-24 px-2 py-1 text-[14px] text-right border border-[#D1D5DB] rounded focus:outline-none focus:border-[#242424]"
+                        className="w-28 px-2 py-1 text-[14px] text-right border border-[#D1D5DB] rounded focus:outline-none focus:border-[#242424]"
                         placeholder="R$ 0,00"
+                        autoFocus
                       />
                       <button
                         onClick={handleServicePriceSave}
                         className="text-[12px] px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
                       >
                         ✓
+                      </button>
+                      <button
+                        onClick={handleServicePriceCancel}
+                        className="text-[12px] px-2 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
+                      >
+                        ✕
                       </button>
                     </>
                   ) : (

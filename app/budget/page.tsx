@@ -100,7 +100,7 @@ function BudgetPageContent() {
         console.log('Produtos adicionados automaticamente ao step budgetServices:', products)
       }
     }
-  }, [currentStep?.id, products, currentValue, updateCurrentStepData])
+  }, [currentStep?.id, products.length, currentValue])
 
   // Auto-search vehicle info when license plate is entered
   useEffect(() => {
@@ -134,43 +134,14 @@ function BudgetPageContent() {
 
     const timeoutId = setTimeout(searchVehicleInfo, 1000) // Debounce de 1 segundo
     return () => clearTimeout(timeoutId)
-  }, [currentStep?.id, currentValue, buscarInformacoesVeiculo, setVehicleInfo])
+  }, [currentStep?.id, currentValue])
 
   // Initialize step 3 with license plate from step 2
   useEffect(() => {
     if (currentStep?.id === 'budgetPlateConfirmation' && !currentValue && stepData.budgetDescription) {
       updateCurrentStepData(stepData.budgetDescription as string)
     }
-  }, [currentStep?.id, currentValue, stepData.budgetDescription, updateCurrentStepData])
-
-  // Clear vehicle info and products when starting a new budget
-  useEffect(() => {
-    if (currentStep?.id === 'budgetName') {
-      clearVehicleInfo()
-      clearProducts()
-    }
-  }, [currentStep?.id, clearVehicleInfo, clearProducts])
-
-  // Clear vehicle info and products when going back to plate input
-  useEffect(() => {
-    if (currentStep?.id === 'budgetDescription') {
-      clearVehicleInfo()
-      clearProducts()
-    }
-  }, [currentStep?.id, clearVehicleInfo, clearProducts])
-
-  // Detectar mudança de placa e limpar dados relacionados
-  const [lastPlate, setLastPlate] = React.useState<string | null>(null)
-  useEffect(() => {
-    if (currentStep?.id === 'budgetDescription' && currentValue && currentValue !== lastPlate) {
-      // Placa mudou, limpar produtos e veículo
-      if (lastPlate !== null) {
-        clearVehicleInfo()
-        clearProducts()
-      }
-      setLastPlate(currentValue)
-    }
-  }, [currentStep?.id, currentValue, lastPlate, clearVehicleInfo, clearProducts])
+  }, [currentStep?.id, currentValue, stepData.budgetDescription])
 
   if (!currentStep) {
     return <div>Carregando...</div>

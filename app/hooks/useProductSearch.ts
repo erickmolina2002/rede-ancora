@@ -103,7 +103,7 @@ export function useProductSearch() {
         hasSearched: true
       }))
     }
-  }, [state.veiculoInfo])
+  }, [])
 
   // Buscar produtos usando Search V2 com superbusca
   const buscarProdutos = useCallback(async (

@@ -148,7 +148,7 @@ export default function BudgetConfirmationInput({
            <img src="/images/image.png" alt="Vehicle Info" className="w-7 h-7" />
             <h4 className="text-[18px] font-semibold text-[#242424]">Informações do Veículo</h4>
           </div>
-          
+
           <div className="bg-white rounded-lg p-4 border border-blue-100">
             <div className="space-y-3">
               <div className="flex justify-between items-center">

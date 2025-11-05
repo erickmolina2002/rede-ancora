@@ -85,7 +85,6 @@ export default function PlateConfirmationInput({
   useEffect(() => {
     if (!vehicleInfo) {
       setError(null)
-      setIsLoading(false)
     }
   }, [vehicleInfo])
 
@@ -183,16 +182,6 @@ export default function PlateConfirmationInput({
           )}
         </div>
 
-        {/* Loading State */}
-        {isLoading && !isEditing && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 animate-in fade-in duration-300">
-            <div className="flex items-center gap-3 justify-center">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-              <span className="text-[14px] text-[#242424]">Buscando informações do veículo...</span>
-            </div>
-          </div>
-        )}
-
         {/* Error State */}
         {error && !isEditing && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 animate-in fade-in duration-300">
@@ -214,89 +203,129 @@ export default function PlateConfirmationInput({
         )}
 
         {/* Vehicle Information Display */}
-        {vehicleInfo && !isEditing && !isLoading && !error && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 animate-in slide-in-from-bottom duration-300">
+        {!isEditing && !error && value && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-center gap-3 mb-2 pl-[4px] pt-[2px]">
               <img src="/images/image.png" alt="Vehicle Info" className="w-7 h-7" />
               <h4 className="text-[16px] font-semibold text-[#242424]">Informações Encontradas</h4>
             </div>
 
             <div className="bg-white rounded-lg p-3 border border-blue-100">
-              <div className="space-y-2">
-                {vehicleInfo.montadora && (
+              {isLoading ? (
+                <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-[12px] text-[#6B7280]">Marca</span>
-                    <span className="text-[12px] font-medium text-[#242424]">
-                      {vehicleInfo.montadora}
-                    </span>
+                    <span className="text-[12px] text-[#9CA3AF] italic">Carregando...</span>
                   </div>
-                )}
-                {vehicleInfo.modelo && (
                   <div className="flex justify-between items-center">
                     <span className="text-[12px] text-[#6B7280]">Modelo</span>
-                    <span className="text-[12px] font-medium text-[#242424]">
-                      {vehicleInfo.modelo}
-                    </span>
+                    <span className="text-[12px] text-[#9CA3AF] italic">Carregando...</span>
                   </div>
-                )}
-                {vehicleInfo.versao && (
                   <div className="flex justify-between items-center">
                     <span className="text-[12px] text-[#6B7280]">Versão</span>
-                    <span className="text-[12px] font-medium text-[#242424]">
-                      {vehicleInfo.versao}
-                    </span>
+                    <span className="text-[12px] text-[#9CA3AF] italic">Carregando...</span>
                   </div>
-                )}
-                {vehicleInfo.anoModelo && (
                   <div className="flex justify-between items-center">
                     <span className="text-[12px] text-[#6B7280]">Ano Modelo</span>
-                    <span className="text-[12px] font-medium text-[#242424]">
-                      {vehicleInfo.anoModelo}
-                    </span>
+                    <span className="text-[12px] text-[#9CA3AF] italic">Carregando...</span>
                   </div>
-                )}
-                {vehicleInfo.motor && (
                   <div className="flex justify-between items-center">
                     <span className="text-[12px] text-[#6B7280]">Motor</span>
-                    <span className="text-[12px] font-medium text-[#242424]">
-                      {vehicleInfo.motor}
-                    </span>
+                    <span className="text-[12px] text-[#9CA3AF] italic">Carregando...</span>
                   </div>
-                )}
-                {vehicleInfo.combustivel && (
                   <div className="flex justify-between items-center">
                     <span className="text-[12px] text-[#6B7280]">Combustível</span>
-                    <span className="text-[12px] font-medium text-[#242424]">
-                      {vehicleInfo.combustivel}
-                    </span>
+                    <span className="text-[12px] text-[#9CA3AF] italic">Carregando...</span>
                   </div>
-                )}
-                {vehicleInfo.cambio && (
                   <div className="flex justify-between items-center">
                     <span className="text-[12px] text-[#6B7280]">Câmbio</span>
-                    <span className="text-[12px] font-medium text-[#242424]">
-                      {vehicleInfo.cambio}
-                    </span>
+                    <span className="text-[12px] text-[#9CA3AF] italic">Carregando...</span>
                   </div>
-                )}
-                {vehicleInfo.carroceria && (
                   <div className="flex justify-between items-center">
                     <span className="text-[12px] text-[#6B7280]">Carroceria</span>
-                    <span className="text-[12px] font-medium text-[#242424]">
-                      {vehicleInfo.carroceria}
-                    </span>
+                    <span className="text-[12px] text-[#9CA3AF] italic">Carregando...</span>
                   </div>
-                )}
-               
-                {vehicleInfo.eixos && (
                   <div className="flex justify-between items-center">
                     <span className="text-[12px] text-[#6B7280]">Eixos</span>
-                    <span className="text-[12px] font-medium text-[#242424]">
-                      {vehicleInfo.eixos}
-                    </span>
+                    <span className="text-[12px] text-[#9CA3AF] italic">Carregando...</span>
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {vehicleInfo?.montadora && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-[12px] text-[#6B7280]">Marca</span>
+                      <span className="text-[12px] font-medium text-[#242424]">
+                        {vehicleInfo.montadora}
+                      </span>
+                    </div>
+                  )}
+                  {vehicleInfo?.modelo && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-[12px] text-[#6B7280]">Modelo</span>
+                      <span className="text-[12px] font-medium text-[#242424]">
+                        {vehicleInfo.modelo}
+                      </span>
+                    </div>
+                  )}
+                  {vehicleInfo?.versao && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-[12px] text-[#6B7280]">Versão</span>
+                      <span className="text-[12px] font-medium text-[#242424]">
+                        {vehicleInfo.versao}
+                      </span>
+                    </div>
+                  )}
+                  {vehicleInfo?.anoModelo && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-[12px] text-[#6B7280]">Ano Modelo</span>
+                      <span className="text-[12px] font-medium text-[#242424]">
+                        {vehicleInfo.anoModelo}
+                      </span>
+                    </div>
+                  )}
+                  {vehicleInfo?.motor && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-[12px] text-[#6B7280]">Motor</span>
+                      <span className="text-[12px] font-medium text-[#242424]">
+                        {vehicleInfo.motor}
+                      </span>
+                    </div>
+                  )}
+                  {vehicleInfo?.combustivel && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-[12px] text-[#6B7280]">Combustível</span>
+                      <span className="text-[12px] font-medium text-[#242424]">
+                        {vehicleInfo.combustivel}
+                      </span>
+                    </div>
+                  )}
+                  {vehicleInfo?.cambio && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-[12px] text-[#6B7280]">Câmbio</span>
+                      <span className="text-[12px] font-medium text-[#242424]">
+                        {vehicleInfo.cambio}
+                      </span>
+                    </div>
+                  )}
+                  {vehicleInfo?.carroceria && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-[12px] text-[#6B7280]">Carroceria</span>
+                      <span className="text-[12px] font-medium text-[#242424]">
+                        {vehicleInfo.carroceria}
+                      </span>
+                    </div>
+                  )}
+                  {vehicleInfo?.eixos && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-[12px] text-[#6B7280]">Eixos</span>
+                      <span className="text-[12px] font-medium text-[#242424]">
+                        {vehicleInfo.eixos}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}

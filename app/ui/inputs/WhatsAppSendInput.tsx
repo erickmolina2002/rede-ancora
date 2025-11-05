@@ -204,10 +204,34 @@ export default function WhatsAppSendInput({
       if (vehicleInfo) {
         message += `*INFORMAÇÕES DO VEÍCULO:*\n`
         message += `🚗 *Placa:* ${vehicleInfo.placa}\n`
-        message += `🚗 *Marca/Modelo:* ${vehicleInfo.montadora} ${vehicleInfo.modelo}\n`
-        message += `📅 *Ano Fabricação:* ${vehicleInfo.anoFabricacao}\n`
-        message += `⚙️ *Câmbio:* ${vehicleInfo.cambio}\n`
-        message += `🚙 *Carroceria:* ${vehicleInfo.carroceria}\n\n`
+        if (vehicleInfo.montadora) {
+          message += `🚗 *Marca:* ${vehicleInfo.montadora}\n`
+        }
+        if (vehicleInfo.modelo) {
+          message += `🚗 *Modelo:* ${vehicleInfo.modelo}\n`
+        }
+        if (vehicleInfo.versao) {
+          message += `🚗 *Versão:* ${vehicleInfo.versao}\n`
+        }
+        if (vehicleInfo.anoModelo) {
+          message += `📅 *Ano Modelo:* ${vehicleInfo.anoModelo}\n`
+        }
+        if (vehicleInfo.motor) {
+          message += `🚙 *Motor:* ${vehicleInfo.motor}\n`
+        }
+        if (vehicleInfo.combustivel) {
+          message += `🚗 *Combustível:* ${vehicleInfo.combustivel}\n`
+        }
+        if (vehicleInfo.cambio) {
+          message += `⚙️ *Câmbio:* ${vehicleInfo.cambio}\n`
+        }
+        if (vehicleInfo.carroceria) {
+          message += `🚙 *Carroceria:* ${vehicleInfo.carroceria}\n`
+        }
+        if (vehicleInfo.eixos) {
+          message += `🚗 *Eixos:* ${vehicleInfo.eixos}\n`
+        }
+        message += `\n`
       } else {
         message += `*Veículo:* ${vehiclePlate}\n\n`
       }
@@ -247,7 +271,7 @@ export default function WhatsAppSendInput({
 
       // Add delivery days if provided
       if (deliveryDays && parseInt(deliveryDays) > 0) {
-        message += `⏱️ *PRAZO DE ENTREGA:*\n`
+        message += `⏰ *PRAZO DE ENTREGA:*\n`
         message += `${deliveryDays} ${parseInt(deliveryDays) === 1 ? 'dia útil' : 'dias úteis'}\n\n`
       }
 

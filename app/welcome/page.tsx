@@ -61,7 +61,7 @@ export default function WelcomePage() {
         </div>
 
         {/* Features */}
-        <div className="grid grid-cols-3 gap-3 text-center">
+        {/* <div className="grid grid-cols-3 gap-3 text-center">
   {[
     { icon: '🔧', label: 'Catálogo Completo' },
     { icon: '⚡', label: 'Entrega Rápida' },
@@ -81,7 +81,7 @@ export default function WelcomePage() {
       </div>
     )
   )}
-</div>
+</div> */}
 
       </div>
     </div>

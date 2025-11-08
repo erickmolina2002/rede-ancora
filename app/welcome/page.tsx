@@ -14,13 +14,13 @@ export default function WelcomePage() {
       <div className="relative z-10 w-full max-w-md animate-slide-up flex flex-col justify-center">
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <div className="flex justify-center mb-6 bg-white/95 backdrop-blur-sm p-4 rounded-2xl shadow-xl">
+          <div className="bg-white/95 backdrop-blur-sm p-2 rounded-2xl">
             <Image
-              src="/images/rede.jpeg"
+              src="/images/rede-2.jpg"
               alt="Ancora Express"
-              width={140}
-              height={70}
-              className="w-auto mx-auto flex justify-center"
+              width={500}
+              height={385}
+              className="w-48 h-auto object-contain rounded-2xl"
               priority
             />
           </div>

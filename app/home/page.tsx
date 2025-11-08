@@ -55,9 +55,9 @@ export default function HomePage() {
             <Image
               src="/images/rede.png"
               alt="Ancora Express"
-              width={120}
-              height={60}
-              className="h-10 w-auto"
+              width={160}
+              height={80}
+              className="h-14 w-auto"
             />
             <div className="flex-1 flex justify-end">
               <Link href="/cart">

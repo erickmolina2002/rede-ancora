@@ -53,8 +53,8 @@ export default function HomePage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex-1" />
             <Image
-              src="/images/ancora-logo-new.png"
-              alt="Rede Ancora"
+              src="/images/rede.png"
+              alt="Ancora Express"
               width={120}
               height={60}
               className="h-10 w-auto"

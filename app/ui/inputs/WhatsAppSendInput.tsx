@@ -280,7 +280,7 @@ export default function WhatsAppSendInput({
       message += `- Garantia dos serviços\n`
       message += `- Peças originais/equivalentes\n`
       message += `- Mão de obra especializada\n\n`
-      message += `*REDE ÂNCORA - OFICINA ESPECIALIZADA*\n`
+      message += `*ANCORA EXPRESS - OFICINA ESPECIALIZADA*\n`
       message += `Seg-Sex: 8h às 18h | Sáb: 8h às 12h\n`
       message += `Entre em contato para agendar!\n`
       message += `Estamos prontos para atendê-lo!\n\n`

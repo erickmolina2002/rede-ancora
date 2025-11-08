@@ -26,8 +26,8 @@ export default function OrderSuccessPage() {
       <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
         <div className="mb-8 animate-scale-in">
           <Image
-            src="/images/ancora-logo-new.png"
-            alt="Rede Ancora"
+            src="/images/rede.png"
+            alt="Ancora Express"
             width={200}
             height={120}
             className="w-48 h-auto"

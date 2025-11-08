@@ -1,17 +1,17 @@
 import sharp from 'sharp';
 import { writeFileSync } from 'fs';
 
-const inputLogo = 'public/images/ancora-logo-new.png';
+const inputLogo = 'public/images/rede.png';
 
 async function generateFavicon() {
   try {
-    console.log('Gerando favicon.ico da Rede Âncora...\n');
+    console.log('Gerando favicon.ico do Ancora Express...\n');
 
     // Gerar ícone 32x32 como base para o favicon
     const faviconBuffer = await sharp(inputLogo)
       .resize(32, 32, {
         fit: 'contain',
-        background: { r: 255, g: 255, b: 255, alpha: 1 }
+        background: { r: 0, g: 0, b: 0, alpha: 0 }
       })
       .png()
       .toBuffer();
@@ -28,7 +28,7 @@ async function generateFavicon() {
       const buffer = await sharp(inputLogo)
         .resize(size, size, {
           fit: 'contain',
-          background: { r: 255, g: 255, b: 255, alpha: 1 }
+          background: { r: 0, g: 0, b: 0, alpha: 0 }
         })
         .png()
         .toBuffer();

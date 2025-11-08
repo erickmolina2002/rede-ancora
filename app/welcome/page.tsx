@@ -16,8 +16,8 @@ export default function WelcomePage() {
         <div className="flex justify-center mb-6">
           <div className="flex justify-center mb-6 bg-white/95 backdrop-blur-sm p-4 rounded-2xl shadow-xl">
             <Image
-              src="/images/ancora-logo-new.png"
-              alt="Rede Ancora"
+              src="/images/rede.jpeg"
+              alt="Ancora Express"
               width={140}
               height={70}
               className="w-auto mx-auto flex justify-center"

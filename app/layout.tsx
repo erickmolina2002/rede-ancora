@@ -17,7 +17,7 @@ export const viewport = {
 
 export const metadata: Metadata = {
   title: "Ancora Express",
-  description: "Marketplace completo de peças automotivas da Rede Âncora",
+  description: "Marketplace completo de peças automotivas do Ancora Express",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -31,12 +31,12 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Ancora Express",
     title: "Ancora Express",
-    description: "Marketplace completo de peças automotivas da Rede Âncora",
+    description: "Marketplace completo de peças automotivas do Ancora Express",
   },
   twitter: {
     card: "summary",
     title: "Ancora Express",
-    description: "Marketplace completo de peças automotivas da Rede Âncora",
+    description: "Marketplace completo de peças automotivas do Ancora Express",
   },
 }
 

@@ -3,7 +3,7 @@ import { mkdir } from 'fs/promises';
 import { join } from 'path';
 
 const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
-const inputLogo = 'public/images/ancora-logo-new.png';
+const inputLogo = 'public/images/rede.png';
 const outputDir = 'public/icons';
 
 async function generateIcons() {
@@ -19,7 +19,7 @@ async function generateIcons() {
       await sharp(inputLogo)
         .resize(size, size, {
           fit: 'contain',
-          background: { r: 255, g: 255, b: 255, alpha: 1 }
+          background: { r: 0, g: 0, b: 0, alpha: 0 }
         })
         .png()
         .toFile(outputPath);
@@ -31,7 +31,7 @@ async function generateIcons() {
     await sharp(inputLogo)
       .resize(16, 16, {
         fit: 'contain',
-        background: { r: 255, g: 255, b: 255, alpha: 1 }
+        background: { r: 0, g: 0, b: 0, alpha: 0 }
       })
       .png()
       .toFile(join(outputDir, 'icon-16x16.png'));
@@ -40,7 +40,7 @@ async function generateIcons() {
     await sharp(inputLogo)
       .resize(32, 32, {
         fit: 'contain',
-        background: { r: 255, g: 255, b: 255, alpha: 1 }
+        background: { r: 0, g: 0, b: 0, alpha: 0 }
       })
       .png()
       .toFile(join(outputDir, 'icon-32x32.png'));
@@ -50,7 +50,7 @@ async function generateIcons() {
     await sharp(inputLogo)
       .resize(32, 32, {
         fit: 'contain',
-        background: { r: 255, g: 255, b: 255, alpha: 1 }
+        background: { r: 0, g: 0, b: 0, alpha: 0 }
       })
       .png()
       .toFile('public/favicon-32x32.png');

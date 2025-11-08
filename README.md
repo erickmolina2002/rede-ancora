@@ -1,6 +1,6 @@
 # Ancora Express
 
-Aplicativo mobile-first para mecânicos da Rede Ancora, com catálogo de peças, carrinho de compras e geração de orçamentos.
+Aplicativo mobile-first para mecânicos do Ancora Express, com catálogo de peças, carrinho de compras e geração de orçamentos.
 
 ## Funcionalidades
 
@@ -41,7 +41,7 @@ Aplicativo mobile-first para mecânicos da Rede Ancora, com catálogo de peças,
 
 ## Integração com API
 
-O aplicativo está integrado com a API de catálogo da Rede Ancora:
+O aplicativo está integrado com a API de catálogo do Ancora Express:
 
 ### Endpoints Disponíveis
 
@@ -162,4 +162,4 @@ lib/
 
 ## Licença
 
-Propriedade da Rede Ancora - Todos os direitos reservados
+Propriedade do Ancora Express - Todos os direitos reservados

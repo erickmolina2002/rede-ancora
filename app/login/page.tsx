@@ -38,8 +38,8 @@ export default function LoginPage() {
 
       <div className="flex justify-center pt-2 pb-6">
         <Image
-          src="/images/ancora-logo-new.png"
-          alt="Rede Ancora"
+          src="/images/rede.png"
+          alt="Ancora Express"
           width={140}
           height={80}
           className="w-auto h-12"

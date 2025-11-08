@@ -10,7 +10,7 @@ export default function BudgetSuccessPage() {
   return (
     <div className="min-h-screen bg-ancora-dark flex flex-col items-center justify-center p-6 text-center">
       <div className="mb-12 animate-scale-in">
-        <Image src="/images/ancora-logo-new.png" alt="Ancora" width={200} height={80} className="h-20 w-auto" />
+        <Image src="/images/rede.png" alt="Ancora" width={200} height={80} className="h-20 w-auto" />
       </div>
 
       <div className="space-y-4 animate-slide-up">
